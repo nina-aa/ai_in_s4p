@@ -17,7 +17,7 @@ This tool records workshop audio, transcribes speech, and uses AI to identify kn
 
 ## Before you start — Download the project
 
-1. Go to the GitHub page for this tool 
+1. Go to the GitHub page for this tool
 2. **Download AI\_in\_S4P.zip (or git clone)**
 3. Once downloaded, find the ZIP file (usually in your Downloads folder), right-click it and select **Extract All**
 4. Choose where to extract it and note that location — you will need it in Step 3
@@ -94,7 +94,7 @@ PowerShell starts in your home folder, so you usually do not need to type the fu
 cd C:/Users/YourName/Documents/foldername
 ```
 
-PowerShell accepts both forward slashes `/` and backslashes `\\` — use whichever feels natural.
+PowerShell accepts both forward slashes `/` and backslashes `\\\\` — use whichever feels natural.
 
 If you are not sure what the path is, open **File Explorer**, navigate to the project folder, right-click on it, select **Properties**, and look at the **Location** field. That gives you the full path to copy.
 
@@ -143,7 +143,7 @@ API keys are like passwords that let the tool use AI services. You need at least
 
 ### Aalto University users only
 
-If you have access to Aalto's OpenAI gateway, add that key as `AALTO\_OPENAI\_API\_KEY`.
+If you have access to Aalto's OpenAI gateway, add that key as `AALTO\\\_OPENAI\\\_API\\\_KEY`.
 
 \---
 
@@ -160,8 +160,8 @@ notepad .env
 You will see lines like:
 
 ```
-ANTHROPIC\_API\_KEY=your-key-here
-GEMINI\_API\_KEY=your-key-here
+ANTHROPIC\\\_API\\\_KEY=your-key-here
+GEMINI\\\_API\\\_KEY=your-key-here
 ```
 
 Replace `your-key-here` with your actual keys. Make sure to leave quotation marks, they are needed for the key.Leave lines for services you do not have — they will simply not activate.
@@ -177,16 +177,16 @@ Save with **Ctrl + S** and close Notepad.
 Make sure you are in the project folder, then run:
 
 ```
-pip install flask flask-cors openai anthropic google-genai python-dotenv httpx openpyxl sounddevice scipy numpy psutil faster-whisper openai-whisper
+pip install flask flask-cors torch openai anthropic google-genai python-dotenv httpx openpyxl sounddevice scipy numpy psutil faster-whisper openai-whisper
 ```
 
 This installs everything needed. It may take several minutes.
 
-> \*\*If `pip` is not found:\*\* Try `python -m pip install ...` with the same package list.
+> \\\*\\\*If `pip` is not found:\\\*\\\* Try `python -m pip install ...` with the same package list.
 
-> \*\*If you get a "Microsoft Visual C++ required" error:\*\*
-> 1. Download \[aka.ms/vs/17/release/vs\_BuildTools.exe](https://aka.ms/vs/17/release/vs\_BuildTools.exe)
-> 2. Run it, select \*\*Desktop development with C++\*\*, install
+> \\\*\\\*If you get a "Microsoft Visual C++ required" error:\\\*\\\*
+> 1. Download \\\[aka.ms/vs/17/release/vs\\\_BuildTools.exe](https://aka.ms/vs/17/release/vs\\\_BuildTools.exe)
+> 2. Run it, select \\\*\\\*Desktop development with C++\\\*\\\*, install
 > 3. Re-run the pip command
 
 \---
@@ -205,9 +205,9 @@ If the browser does not open automatically, go to `http://localhost:5001/setting
 
 If Windows asks whether to allow Python through the firewall, click **Allow access**.
 
-> \*\*Keep this terminal window open\*\* the entire time you use the tool. The server runs inside it — if you close it, the tool stops immediately and the browser will show an error. If that happens accidentally, just run `python launch.py` again and your session data will still be there.
+> \\\*\\\*Keep this terminal window open\\\*\\\* the entire time you use the tool. The server runs inside it — if you close it, the tool stops immediately and the browser will show an error. If that happens accidentally, just run `python launch.py` again and your session data will still be there.
 
-> \*\*Things generally take longer than you might expect.\*\* The server takes time to start. After you start a session, loading the Whisper model on first run takes another minute or two. Subsequent starts are faster. Be patient throughout.
+> \\\*\\\*Things generally take longer than you might expect.\\\*\\\* The server takes time to start. After you start a session, loading the Whisper model on first run takes another minute or two. Subsequent starts are faster. Be patient throughout.
 
 \---
 
@@ -236,17 +236,17 @@ The settings page is open in your browser. Work through the options:
 
 Click **Start session**. The browser switches to the main view. The red **REC** indicator in the top left confirms recording is active.
 
-> \*\*First session:\*\* The Whisper model downloads the first time (hundreds of MB to over 1 GB). This takes a few extra minutes. Subsequent starts load from disk.
+> \\\*\\\*First session:\\\*\\\* The Whisper model downloads the first time (hundreds of MB to over 1 GB). This takes a few extra minutes. Subsequent starts load from disk.
 
 \---
 
 ## Where your data is saved
 
-All session data is saved automatically inside the project folder under `sessions\\`. Each session gets its own timestamped subfolder (e.g. `sessions\\2025-05-26\_14-30-00\\`) containing:
+All session data is saved automatically inside the project folder under `sessions\\\\`. Each session gets its own timestamped subfolder (e.g. `sessions\\\\2025-05-26\\\_14-30-00\\\\`) containing:
 
-* `chunks\\` — raw audio recordings
-* `transcripts\\` — text transcriptions of each chunk
-* `analysis\\` — AI analysis results (gaps, assumptions, synthesis)
+* `chunks\\\\` — raw audio recordings
+* `transcripts\\\\` — text transcriptions of each chunk
+* `analysis\\\\` — AI analysis results (gaps, assumptions, synthesis)
 
 Sessions are never deleted automatically. You can open these folders in File Explorer to access or back up your data.
 
