@@ -1,0 +1,1700 @@
+<!doctype html>
+<html lang="fi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI assistentti </title>
+    <style>
+      :root{
+        --page-bg:#f2f2f7;
+        --text:rgba(0,0,0,.92);
+        --muted:rgba(0,0,0,.6);
+        --card:rgba(255,255,255,.8);
+        --card-solid:#fff;
+        --shadow:0 1px 0 rgba(0,0,0,.06),0 18px 60px rgba(0,0,0,.1);
+        --shadow-soft:0 1px 0 rgba(0,0,0,.04),0 18px 60px rgba(0,0,0,.08);
+      }
+      *{box-sizing:border-box}
+      html,body{height:100%}
+      body{
+        margin:0;
+        font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+        color:var(--text);
+        background:var(--page-bg);
+      }
+      .page{
+        min-height:100vh;
+        padding:8px;
+        background:
+          radial-gradient(1100px 600px at 15% -10%, rgba(0, 122, 255, 0.16), transparent 60%),
+          radial-gradient(900px 500px at 95% 10%, rgba(175, 82, 222, 0.14), transparent 55%),
+          radial-gradient(1000px 600px at 50% 115%, rgba(52, 199, 89, 0.1), transparent 55%),
+          var(--page-bg);
+      }
+      .wrap{min-height:calc(100vh - 16px);display:flex;flex-direction:column}
+      .frame{flex:1;display:flex;flex-direction:column;border-radius:44px;padding:5px;background:rgba(0,0,0,.1)}
+      .device{
+        flex:1;
+        border-radius:40px;
+        overflow:hidden;
+        background:var(--card-solid);
+        border:1px solid rgba(0,0,0,.1);
+        box-shadow:var(--shadow);
+      }
+      .chrome{
+        padding:12px 24px;
+        background:rgba(255,255,255,.65);
+        -webkit-backdrop-filter:blur(18px);
+        backdrop-filter:blur(18px);
+        border-bottom:1px solid rgba(0,0,0,.1);
+      }
+      .chromeRow{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:16px;
+        flex-wrap:wrap;
+      }
+      .brand{display:flex;align-items:center;gap:12px}
+      .logo{
+        width:40px;height:40px;
+        border-radius:16px;
+        display:grid;place-items:center;
+        background:#111;color:#fff;
+        box-shadow:0 6px 20px rgba(0,0,0,.18);
+        font-weight:700;font-size:15px;
+        letter-spacing:.02em;
+      }
+      .title{font-size:20px;font-weight:700;letter-spacing:-.01em;line-height:1.1}
+      .subtitle{margin-top:4px;font-size:14px;color:rgba(0,0,0,.6)}
+
+      /* segmented controls */
+      .topNav,.nav{
+        display:inline-flex;
+        align-items:center;
+        padding:4px;
+        border-radius:999px;
+        background:rgba(255,255,255,.7);
+        -webkit-backdrop-filter:blur(18px);
+        backdrop-filter:blur(18px);
+        border:1px solid rgba(0,0,0,.1);
+        box-shadow:0 1px 0 rgba(0,0,0,.06),0 10px 30px rgba(0,0,0,.1);
+      }
+      .topNav button,.nav button{
+        appearance:none;border:0;
+        background:transparent;
+        padding:10px 16px;
+        border-radius:999px;
+        font-size:15px;font-weight:700;
+        color:rgba(0,0,0,.7);
+        cursor:pointer;
+      }
+      .topNav button.active,.nav button.active{
+        background:#111;color:#fff;
+        box-shadow:0 6px 18px rgba(0,0,0,.16);
+      }
+
+      .content{padding:12px 16px}
+      @media (min-width:768px){.content{padding:14px 20px}}
+      .inner{display:grid;gap:18px}
+
+      .card{
+        border-radius:24px;
+        background:var(--card);
+        -webkit-backdrop-filter:blur(18px);
+        backdrop-filter:blur(18px);
+        border:1px solid rgba(0,0,0,.08);
+        box-shadow:var(--shadow-soft);
+      }
+      .card.pad{padding:20px}
+      @media (min-width:768px){.card.pad{padding:22px}}
+
+      .h2{margin:0;font-size:23px;font-weight:800;letter-spacing:-.015em}
+      .h3{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em}
+      .body{margin:0;font-size:16px;line-height:1.6;color:rgba(0,0,0,.8)}
+
+      .cardHeader{display:flex;align-items:center;justify-content:space-between;gap:12px}
+
+      /* Bigger badge counter */
+      .badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:44px;
+        height:34px;
+        padding:0 12px;
+        border-radius:999px;
+        font-size:16px;
+        font-weight:900;
+        color:rgba(0,0,0,.7);
+        background:rgba(0,0,0,.05);
+        border:1px solid rgba(0,0,0,.1);
+      }
+
+      ul.list{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:12px}
+      .li{display:flex;gap:12px;align-items:flex-start}
+      .dot{
+        margin-top:9px;
+        width:10px;height:10px;
+        border-radius:999px;
+        background:rgba(0,0,0,.22);
+        flex:0 0 auto;
+      }
+
+      .grid2{display:grid;grid-template-columns:1fr;gap:18px}
+      @media (min-width:768px){.grid2{grid-template-columns:1fr 1fr}}
+
+      /* Transcript */
+      .transcript-container{
+        max-height:600px;
+        overflow-y:auto;
+        font-family:ui-monospace,"SF Mono",Monaco,"Cascadia Code",monospace;
+        font-size:15px;
+        line-height:1.7;
+        white-space:pre-wrap;
+        color:rgba(0,0,0,.75);
+      }
+
+      /* Minimal 2-col table (default: Kertaa | Aihe) */
+.table2{margin-top:14px;display:grid;gap:10px}
+.tHead,.tRow{
+  display:grid;
+  grid-template-columns:84px 1fr;
+  gap:12px;
+  align-items:start;
+}
+.tHead{
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:rgba(0,0,0,.45);
+}
+.tK{font-variant-numeric:tabular-nums}
+.tRow .tK{font-size:15px;font-weight:750;color:rgba(0,0,0,.7)}
+.tRow .tA{font-size:16px;color:rgba(0,0,0,.8);line-height:1.5}
+
+
+      /* Button (download placeholder) */
+      .btn{
+        appearance:none;
+        border:1px solid rgba(0,0,0,.12);
+        background:rgba(255,255,255,.7);
+        -webkit-backdrop-filter:blur(14px);
+        backdrop-filter:blur(14px);
+        border-radius:999px;
+        padding:8px 12px;
+        font-size:15px;
+        font-weight:750;
+        color:rgba(0,0,0,.8);
+        cursor:pointer;
+      }
+      .btn:active{transform:translateY(1px)}
+
+      .empty-state{text-align:center;padding:54px 20px;color:rgba(0,0,0,.4)}
+      .empty-state-icon{font-size:55px;margin-bottom:16px}
+      .chat-placeholder{
+        display:flex;flex-direction:column;align-items:center;justify-content:center;
+        min-height:360px;color:rgba(0,0,0,.4)
+      }
+
+      /* Star button */
+      .star-btn{
+        background:none;border:none;cursor:pointer;
+        font-size:34px;color:rgba(0,0,0,.28);
+        padding:12px 6px 4px 12px;
+        line-height:1;
+        flex-shrink:0;align-self:flex-start;margin-top:-8px;
+        transition:color .12s;
+      }
+      .star-btn:hover{color:rgba(0,0,0,.5)}
+      .star-btn.starred{color:rgba(0,0,0,.75)}
+
+      /* Saved section inside card */
+      .saved-section{
+        margin-top:18px;padding-top:14px;
+        border-top:1px solid rgba(0,0,0,.15);
+        display:none;
+      }
+      .saved-section-label{
+        margin:0 0 10px;
+        font-size:12px;font-weight:800;letter-spacing:.06em;
+        text-transform:uppercase;color:rgba(0,0,0,.45);
+      }
+.li.saved-hi{ }
+
+      #synthesisText{
+        display:grid;
+        grid-template-columns:repeat(3,1fr);
+        gap:10px;
+      }
+      .synth-card{
+        background:var(--card);
+        border:1px solid rgba(0,0,0,.08);
+        border-radius:14px;
+        padding:11px 13px;
+        box-shadow:var(--shadow-soft);
+      }
+      .synth-card .synth-h{
+        margin:0 0 4px;
+        font-size:15px;
+        font-weight:800;
+        letter-spacing:-.01em;
+        color:rgba(0,0,0,.85);
+      }
+      .synth-card .synth-p{
+        margin:0;
+        font-size:15px;
+        line-height:1.45;
+        color:rgba(0,0,0,.8);
+      }
+
+      @supports (-webkit-font-smoothing:antialiased){
+        body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+      }
+
+      /* Chat */
+      .chat-msgs{
+        display:flex;flex-direction:column;gap:12px;
+        min-height:280px;max-height:480px;overflow-y:auto;
+        padding:4px 0;
+      }
+      .chat-msg{display:flex;gap:10px;align-items:flex-end}
+      .chat-msg.user{flex-direction:row-reverse}
+      .chat-bubble{
+        max-width:80%;padding:10px 14px;
+        font-size:15px;line-height:1.55;white-space:pre-wrap;word-break:break-word;
+      }
+      .chat-msg.user .chat-bubble{
+        background:#111;color:#fff;
+        border-radius:18px 18px 4px 18px;
+      }
+      .chat-msg.assistant .chat-bubble{
+        background:rgba(0,0,0,.05);color:rgba(0,0,0,.85);
+        border-radius:18px 18px 18px 4px;
+      }
+      .chat-msg.assistant.loading .chat-bubble{color:rgba(0,0,0,.35)}
+      .chat-input-row{
+        display:flex;gap:10px;align-items:flex-end;
+        margin-top:16px;padding-top:14px;
+        border-top:1px solid rgba(0,0,0,.08);
+      }
+      .chat-input-row textarea{
+        flex:1;font-size:15px;font-family:inherit;line-height:1.55;
+        padding:10px 14px;border-radius:14px;
+        border:1px solid rgba(0,0,0,.12);background:rgba(0,0,0,.02);
+        resize:none;color:rgba(0,0,0,.85);outline:none;
+        max-height:120px;overflow-y:auto;
+      }
+      .chat-input-row textarea:focus{border-color:rgba(0,0,0,.25)}
+      .chat-send-btn{
+        appearance:none;border:0;border-radius:14px;
+        background:#111;color:#fff;
+        width:44px;height:44px;flex-shrink:0;
+        font-size:20px;cursor:pointer;
+        display:grid;place-items:center;
+      }
+      .chat-send-btn:disabled{opacity:.35;cursor:default}
+@keyframes recPulse{0%,100%{opacity:1}50%{opacity:.3}}
+      #recIndicator{
+        display:none;
+        align-items:center;
+        gap:7px;
+        font-size:14px;
+        font-weight:700;
+        color:rgba(0,0,0,.55);
+        white-space:nowrap;
+      }
+      #recDot{
+        width:8px;height:8px;
+        border-radius:50%;
+        background:#ff3b30;
+        flex-shrink:0;
+        animation:recPulse 1.4s ease-in-out infinite;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page">
+      <div class="wrap">
+        <div class="frame">
+          <div class="device">
+<div id="batteryBanner" style="display:none;padding:10px 24px;background:#ff9500;color:#fff;font-size:13px;font-weight:700;text-align:center;letter-spacing:.01em;"></div>
+            <div id="diskBanner" style="display:none;padding:10px 24px;background:#ff9500;color:#fff;font-size:13px;font-weight:700;text-align:center;letter-spacing:.01em;"></div>
+            <div id="micBanner" style="display:none;padding:10px 24px;background:#ff3b30;color:#fff;font-size:13px;font-weight:700;text-align:center;letter-spacing:.01em;"></div>
+            <header class="chrome">
+              <div class="chromeRow">
+                <div class="brand">
+                  <div class="logo" aria-hidden="true">AI</div>
+                  <div>
+                    <div class="title" data-fi="Tiedesparraus" data-en="Science sparring">Tiedesparraus</div>
+                    <div class="subtitle" data-fi="AI assistentti" data-en="AI assistant">AI assistentti</div>
+                    <div style="display:flex;align-items:center;gap:7px;min-height:18px">
+                      <div id="recIndicator">
+                        <span id="recDot"></span>
+                        <span id="recLabel">REC 00:00</span>
+                      </div>
+                      <span id="gapsTimestamp" style="font-size:12px;color:rgba(0,0,0,.38)"></span>
+                    </div>
+                  </div>
+                </div>
+
+                <nav class="topNav" aria-label="Vaihe">
+                  <button class="active" type="button" data-stage="before" data-fi="Ennen työpajaa" data-en="Before workshop">Ennen työpajaa</button>
+                  <button type="button" data-stage="during" data-fi="Työpajan aikana" data-en="During workshop">Työpajan aikana</button>
+                  <button type="button" data-stage="after" data-fi="Työpajan jälkeen" data-en="After workshop">Työpajan jälkeen</button>
+                </nav>
+
+                <nav class="nav" aria-label="Navigaatio">
+                  <!-- Before -->
+                  <button class="active" type="button" data-tab="kuvat" data-stage="before" data-fi="Kuvat" data-en="Images">Kuvat</button>
+                  <button type="button" data-tab="diagramit" data-stage="before" data-fi="Diagramit" data-en="Diagrams">Diagramit</button>
+
+                  <!-- During -->
+                  <button type="button" data-tab="gaps" data-stage="during" data-fi="Tietoaukot" data-en="Knowledge gaps">Tietoaukot</button>
+                  <button type="button" data-tab="synth" data-stage="during" data-fi="Synteesi" data-en="Synthesis">Synteesi</button>
+                  <button type="button" data-tab="analyysi" data-stage="during" data-fi="Aiheet" data-en="Topics">Aiheet</button>
+
+                  <!-- After -->
+                  <button type="button" data-tab="litteraatti" data-stage="after" data-fi="Litteraatti" data-en="Transcript">Litteraatti</button>
+                  <button type="button" data-tab="yhteenveto" data-stage="after" data-fi="Yhteenveto" data-en="Summary">Yhteenveto</button>
+                  <button type="button" data-tab="chat" data-stage="after">Chat</button>
+                </nav>
+
+                <a href="/settings" title="Asetukset"
+                   style="font-size:25px;line-height:1;color:rgba(0,0,0,.85);text-decoration:none;
+                          display:inline-flex;align-items:center;flex-shrink:0;padding:4px"
+                   aria-label="Asetukset">⚙</a>
+              </div>
+            </header>
+
+            <main class="content">
+              <div class="inner">
+
+                <!-- TIETOAUKOT VIEW -->
+                <div id="viewGaps" class="view" style="display:none">
+                  <div class="grid2">
+                    <section class="card pad" aria-label="Tunnistetut tietoaukot">
+                      <div class="cardHeader">
+                        <h3 class="h3" data-fi="Tunnistetut tietoaukot" data-en="Identified knowledge gaps">Tunnistetut tietoaukot</h3>
+                        <span class="badge" id="badgeGaps">0</span>
+                      </div>
+                      <ul class="list" id="gapsList"></ul>
+                      <div class="saved-section" id="savedGapsSection">
+                        <ul class="list" id="savedGapsList"></ul>
+                      </div>
+                    </section>
+
+                    <section class="card pad" aria-label="Tunnistetut oletukset">
+                      <div class="cardHeader">
+                        <h3 class="h3" data-fi="Tunnistetut oletukset" data-en="Identified assumptions">Tunnistetut oletukset</h3>
+                        <span class="badge" id="badgeAssumptions">0</span>
+                      </div>
+                      <ul class="list" id="assumptionsList"></ul>
+                      <div class="saved-section" id="savedAssumptionsSection">
+                        <ul class="list" id="savedAssumptionsList"></ul>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+
+                <!-- SYNTEESI VIEW -->
+                <div id="viewSynth" class="view" style="display:none">
+                  <div id="synthesisText">
+                    <p class="body" style="font-size:15px;line-height:1.7">Ladataan...</p>
+                  </div>
+                  <div class="saved-section" id="savedSynthSection">
+                    <div id="savedSynthList" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px"></div>
+                  </div>
+                </div>
+
+                <!-- ANALYYSI VIEW -->
+                <div id="viewAnalyysi" class="view" style="display:none">
+                  <div style="display:flex;gap:16px;align-items:flex-start">
+                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
+                      <section class="card pad">
+                        <div class="cardHeader">
+                          <h2 class="h2" data-fi="Eniten puhutut aiheet" data-en="Most discussed topics">Eniten puhutut aiheet</h2>
+                        </div>
+                        <div id="topicsTable" class="table2" style="margin-top:14px">
+                          <p class="body">Ladataan...</p>
+                        </div>
+                      </section>
+                    </div>
+
+                    <section class="card pad" style="flex:1;min-width:0">
+                      <div class="cardHeader">
+                        <h2 class="h2" data-fi="Eri mieltä" data-en="Disagreements">Eri mieltä</h2>
+                      </div>
+                      <div id="agreementTable" class="table2">
+                        <p class="body">Ladataan...</p>
+                      </div>
+                      <div class="saved-section" id="savedDisagreementsSection">
+                        <ul class="list" id="savedDisagreementsList"></ul>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+
+                <!-- LITTERAATTI VIEW -->
+                <div id="viewLitteraatti" class="view" style="display:none">
+                  <section class="card pad">
+                    <div class="cardHeader">
+                      <h2 class="h2" data-fi="Litteraatti" data-en="Transcript">Litteraatti</h2>
+                      <span class="badge" id="chunkCount">0</span>
+                    </div>
+
+                    <!-- Download placeholder button (no functionality yet) -->
+                    <div style="margin-top:12px; display:flex; justify-content:flex-start; gap:10px; flex-wrap:wrap;">
+                      <button class="btn" id="btnDownloadTranscript" type="button" data-fi="Ladata literaatti" data-en="Download transcript">Ladata literaatti</button>
+                    </div>
+
+                    <div class="transcript-container" id="transcriptContent" style="margin-top:14px">
+                      Ladataan...
+                    </div>
+                  </section>
+                </div>
+
+                <!-- KUVAT VIEW -->
+                <div id="viewKuvat" class="view" style="display:none">
+                  <section class="card pad">
+                    <div class="cardHeader">
+                      <h2 class="h2" data-fi="Kuvageneraattori" data-en="Image generator">Kuvageneraattori</h2>
+                      <nav class="nav" id="imageProviderNav" aria-label="Palveluntarjoaja" style="display:none">
+                        <button class="active" type="button" data-provider="gemini">Gemini</button>
+                        <button type="button" data-provider="openai" id="btnProviderOpenai">OpenAI</button>
+                        <button type="button" data-provider="both" id="btnProviderBoth">Molemmat</button>
+                      </nav>
+                    </div>
+
+                    <div style="margin-top:16px">
+                      <textarea id="imagePrompt" rows="3"
+                        placeholder="Kuvaile haluamasi kuva englanniksi tai suomeksi..."
+                        style="width:100%;font-size:14px;font-family:inherit;line-height:1.6;padding:12px;border-radius:12px;border:1px solid rgba(0,0,0,.12);background:rgba(0,0,0,.02);resize:vertical;color:rgba(0,0,0,.8);outline:none"></textarea>
+                      <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                        <button class="btn" id="btnGenerateImage" type="button"
+                          style="background:#111;color:#fff;border-color:#111;padding:10px 20px" data-fi="Generoi kuva" data-en="Generate image">Generoi kuva</button>
+                        <span id="imageGenStatus" style="font-size:13px;color:rgba(0,0,0,.45)"></span>
+                      </div>
+                    </div>
+
+                    <div id="imageResults" style="margin-top:20px;display:none"></div>
+                  </section>
+                </div>
+
+                <!-- DIAGRAMIT VIEW -->
+                <div id="viewDiagramit" class="view" style="display:none">
+                  <section class="card pad">
+                    <div class="cardHeader">
+                      <h2 class="h2">Diagramit</h2>
+                    </div>
+
+                    <div style="margin-top:16px">
+                      <textarea id="diagramPrompt" rows="18"
+                        placeholder="Laita teksti tänne. Tekoäly tunnistaa keskeisen käsitteen ja oletuksia."
+                        style="width:100%;font-size:14px;font-family:inherit;line-height:1.6;padding:14px;border-radius:12px;border:1px solid rgba(0,0,0,.12);background:rgba(0,0,0,.02);resize:vertical;color:rgba(0,0,0,.8);outline:none;min-height:280px"></textarea>
+                    </div>
+
+                    <div style="margin-top:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                      <button class="btn" id="btnGenerateDiagram" type="button"
+                        style="background:#111;color:#fff;border-color:#111;padding:10px 22px">Generate &amp; Download Excel</button>
+                      <span id="diagramStatus" style="font-size:13px;color:rgba(0,0,0,.45)"></span>
+                    </div>
+                  </section>
+                </div>
+
+                <!-- CHAT VIEW -->
+                <div id="viewChat" class="view" style="display:none">
+                  <section class="card pad">
+                    <div class="cardHeader">
+                      <h2 class="h2">Chat</h2>
+                      <span id="chatModelLabel" style="font-size:12px;color:rgba(0,0,0,.35)"></span>
+                    </div>
+                    <div class="chat-msgs" id="chatMessages" style="margin-top:14px"></div>
+                    <div class="chat-input-row">
+                      <textarea id="chatInput" rows="1" placeholder="Kysy litteraatista…"></textarea>
+                      <button class="chat-send-btn" id="btnSendChat" type="button" title="Lähetä">↑</button>
+                    </div>
+                  </section>
+                </div>
+
+                <!-- YHTEENVETO VIEW -->
+                <div id="viewYhteenveto" class="view" style="display:none">
+                  <div class="grid2" style="align-items:start">
+                    <section class="card pad">
+                      <div class="cardHeader">
+                        <h2 class="h2" data-fi="Yhteenveto" data-en="Summary">Yhteenveto</h2>
+                        <div style="display:flex;gap:8px;align-items:center">
+                          <button class="btn" id="btnDownloadYhteenveto" type="button" style="display:none" data-fi="Lataa yhteenveto" data-en="Download summary">Lataa yhteenveto</button>
+                          <button class="btn" id="btnLuoYhteenveto" type="button" data-fi="Luo yhteenveto" data-en="Create summary">Luo yhteenveto</button>
+                        </div>
+                      </div>
+
+                      <!-- Prompt toggle -->
+                      <div style="margin-top:14px">
+                        <button type="button" id="btnTogglePrompt"
+                          style="background:none;border:none;padding:0;font-size:13px;color:rgba(0,0,0,.45);cursor:pointer;text-decoration:underline;text-underline-offset:3px">
+                          <span data-fi="Katso ja muokkaa prompti" data-en="View and edit prompt">Katso ja muokkaa prompti</span>
+                        </button>
+                        <div id="promptSection" style="display:none;margin-top:10px">
+                          <textarea id="yhteenvetoPrompt" rows="9"
+                            style="width:100%;font-size:13px;font-family:inherit;line-height:1.6;padding:12px;border-radius:12px;border:1px solid rgba(0,0,0,.12);background:rgba(0,0,0,.02);resize:vertical;color:rgba(0,0,0,.8);outline:none"></textarea>
+                        </div>
+                      </div>
+
+                      <!-- Result -->
+                      <div id="yhteenvetoResult" style="display:none;margin-top:18px">
+                        <hr style="border:none;border-top:1px solid rgba(0,0,0,.08);margin:0 0 16px">
+                        <p class="body" id="yhteenvetoText" style="font-size:15px;line-height:1.8;white-space:pre-wrap"></p>
+                      </div>
+                    </section>
+
+                    <section class="card pad">
+                      <div class="cardHeader">
+                        <h2 class="h2" data-fi="Tallennetut havainnot" data-en="Saved insights">Tallennetut havainnot</h2>
+                        <button class="btn" id="btnDownloadInsights" type="button" data-fi="Lataa" data-en="Download">Lataa</button>
+                      </div>
+                      <div id="savedInsightsContent" style="margin-top:14px">
+                        <p class="body" style="color:rgba(0,0,0,.4)">Ladataan...</p>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+
+              </div>
+            </main>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = 'http://localhost:5001';
+      const _lang = localStorage.getItem('settings_language') || 'fi';
+      function t(fi, en) { return _lang === 'en' ? en : fi; }
+      function applyLang() {
+        document.querySelectorAll('[data-fi][data-en]').forEach(el => {
+          el.textContent = el.dataset[_lang] || el.dataset.fi;
+        });
+        const el_ip = document.getElementById('imagePrompt');
+        if (el_ip) el_ip.placeholder = t('Kuvaile haluamasi kuva englanniksi tai suomeksi...', 'Describe the image you want...');
+        const el_dp = document.getElementById('diagramPrompt');
+        if (el_dp) el_dp.placeholder = t('Laita teksti tänne. Tekoäly tunnistaa keskeisen käsitteen ja oletuksia.', 'Paste text here. AI identifies the central concept and assumptions.');
+        const el_ci = document.getElementById('chatInput');
+        if (el_ci) el_ci.placeholder = t('Kysy litteraatista…', 'Ask about the transcript…');
+      }
+
+      // ── Saved items (starred) ─────────────────────────────────────
+      const _SAVED_KEYS = { gaps: 'savedGaps', assumptions: 'savedAssumptions', synth: 'savedSynth', disagreements: 'savedDisagreements' };
+
+      function loadSaved(type) {
+        try { return JSON.parse(localStorage.getItem(_SAVED_KEYS[type]) || '[]'); }
+        catch { return []; }
+      }
+      function persistSaved(type, arr) {
+        localStorage.setItem(_SAVED_KEYS[type], JSON.stringify(arr));
+      }
+      function isSaved(type, text) {
+        if (!type) return false;
+        return loadSaved(type).includes(text);
+      }
+
+      function toggleSave(type, text, starEl) {
+        const arr = loadSaved(type);
+        const willSave = !arr.includes(text);
+        if (willSave) {
+          arr.unshift(text);
+          starEl.closest('.li, .synth-card, .tRow')?.remove();
+          fetch(`${API_BASE}/api/save-insight`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({type, text})
+          }).catch(() => {});
+        } else {
+          const idx = arr.indexOf(text);
+          if (idx !== -1) arr.splice(idx, 1);
+        }
+        persistSaved(type, arr);
+        renderSavedSection(type);
+      }
+
+      function renderSavedSection(type) {
+        if (type === 'synth') { renderSavedSynth(); return; }
+        if (type === 'disagreements') { renderSavedDisagreements(); return; }
+
+        const sectionId = type === 'gaps' ? 'savedGapsSection' : 'savedAssumptionsSection';
+        const listId    = type === 'gaps' ? 'savedGapsList'    : 'savedAssumptionsList';
+        const section   = document.getElementById(sectionId);
+        const listEl    = document.getElementById(listId);
+        const saved     = loadSaved(type);
+
+        if (saved.length === 0) { section.style.display = 'none'; return; }
+        section.style.display = 'block';
+        listEl.innerHTML = '';
+
+        for (const text of saved) {
+          const li = document.createElement('li');
+          li.className = 'li saved-hi';
+          const dot = document.createElement('span');
+          dot.className = 'dot'; dot.setAttribute('aria-hidden', 'true');
+          const p = document.createElement('p');
+          const safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          p.className = 'body'; p.style.flex = '1'; p.innerHTML = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+          const star = document.createElement('button');
+          star.className = 'star-btn starred';
+          star.setAttribute('aria-label', 'Poista tallennetuista');
+          star.textContent = '★';
+          star.addEventListener('click', () => {
+            const s = loadSaved(type);
+            const idx = s.indexOf(text);
+            if (idx !== -1) s.splice(idx, 1);
+            persistSaved(type, s);
+            renderSavedSection(type);
+            const mainId = type === 'gaps' ? 'gapsList' : 'assumptionsList';
+            const mainList = document.getElementById(mainId);
+            const alreadyThere = Array.from(mainList.querySelectorAll('.body'))
+              .some(el => el.textContent === text);
+            if (!alreadyThere) mainList.appendChild(makeListItem(text, type));
+          });
+          li.appendChild(dot); li.appendChild(p); li.appendChild(star);
+          listEl.appendChild(li);
+        }
+      }
+
+      function renderSavedSynth() {
+        const section = document.getElementById('savedSynthSection');
+        const listEl  = document.getElementById('savedSynthList');
+        const saved   = loadSaved('synth');
+        if (saved.length === 0) { section.style.display = 'none'; return; }
+        section.style.display = 'block';
+        listEl.innerHTML = '';
+        for (const text of saved) {
+          let block;
+          try { block = JSON.parse(text); } catch { block = {h: text, ps: []}; }
+          const card = document.createElement('div');
+          card.className = 'synth-card';
+          const headerRow = document.createElement('div');
+          headerRow.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;gap:6px';
+          const h = document.createElement('p');
+          h.className = 'synth-h'; h.textContent = block.h;
+          const star = document.createElement('button');
+          star.className = 'star-btn starred';
+          star.setAttribute('aria-label', 'Poista tallennetuista');
+          star.textContent = '★';
+          star.addEventListener('click', () => {
+            const s = loadSaved('synth');
+            const idx = s.indexOf(text);
+            if (idx !== -1) s.splice(idx, 1);
+            persistSaved('synth', s);
+            renderSavedSynth();
+            loadStructured();
+          });
+          headerRow.appendChild(h); headerRow.appendChild(star);
+          card.appendChild(headerRow);
+          for (const p of (block.ps || [])) {
+            const pEl = document.createElement('p');
+            pEl.className = 'synth-p'; pEl.textContent = p;
+            card.appendChild(pEl);
+          }
+          listEl.appendChild(card);
+        }
+      }
+
+      function renderSavedDisagreements() {
+        const section = document.getElementById('savedDisagreementsSection');
+        const listEl  = document.getElementById('savedDisagreementsList');
+        const saved   = loadSaved('disagreements');
+        if (saved.length === 0) { section.style.display = 'none'; return; }
+        section.style.display = 'block';
+        listEl.innerHTML = '';
+        for (const text of saved) {
+          const li = document.createElement('li');
+          li.className = 'li saved-hi';
+          const dot = document.createElement('span');
+          dot.className = 'dot'; dot.setAttribute('aria-hidden', 'true');
+          const p = document.createElement('p');
+          const safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          p.className = 'body'; p.style.flex = '1'; p.innerHTML = safe;
+          const star = document.createElement('button');
+          star.className = 'star-btn starred';
+          star.setAttribute('aria-label', 'Poista tallennetuista');
+          star.textContent = '★';
+          star.addEventListener('click', () => {
+            const s = loadSaved('disagreements');
+            const idx = s.indexOf(text);
+            if (idx !== -1) s.splice(idx, 1);
+            persistSaved('disagreements', s);
+            renderSavedDisagreements();
+            loadAnalysis();
+          });
+          li.appendChild(dot); li.appendChild(p); li.appendChild(star);
+          listEl.appendChild(li);
+        }
+      }
+
+      function makeListItem(text, type) {
+        const li = document.createElement('li');
+        li.className = 'li';
+        const dot = document.createElement('span');
+        dot.className = 'dot'; dot.setAttribute('aria-hidden', 'true');
+        const p = document.createElement('p');
+        const safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        p.className = 'body'; p.style.flex = '1'; p.innerHTML = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        li.appendChild(dot); li.appendChild(p);
+        if (type) {
+          const saved = isSaved(type, text);
+          const star = document.createElement('button');
+          star.className = 'star-btn' + (saved ? ' starred' : '');
+          star.setAttribute('aria-label', saved ? 'Poista tallennetuista' : 'Tallenna');
+          star.textContent = saved ? '★' : '☆';
+          star.addEventListener('click', () => toggleSave(type, text, star));
+          li.appendChild(star);
+        }
+        return li;
+      }
+
+      function checkSession() {
+        fetch(`${API_BASE}/api/session-id`)
+          .then(r => r.json())
+          .then(data => {
+            const id = data.session_id;
+            if (!id) return;
+            const stored = localStorage.getItem('current_session_id');
+            if (id !== stored) {
+              localStorage.removeItem('savedGaps');
+              localStorage.removeItem('savedAssumptions');
+              localStorage.removeItem('savedSynth');
+              localStorage.removeItem('savedDisagreements');
+              localStorage.removeItem('yhteenvetoPrompt');
+              localStorage.setItem('current_session_id', id);
+              renderSavedSection('gaps');
+              renderSavedSection('assumptions');
+              renderSavedSection('synth');
+              renderSavedSection('disagreements');
+              fetch(`${API_BASE}/api/session-language`)
+                .then(r => r.json())
+                .then(d => _applyLangDefaultPrompt(d.language || 'fi'))
+                .catch(() => {});
+            }
+          })
+          .catch(() => {});
+      }
+
+      function renderList(el, items, type) {
+        el.innerHTML = "";
+        const saved = type ? loadSaved(type) : [];
+        for (const t of items) {
+          if (saved.includes(t)) continue;
+          el.appendChild(makeListItem(t, type));
+        }
+      }
+
+      // Generic 2-column table: Kertaa | Aihe
+      function renderTable2(el, rows) {
+        if (!rows || rows.length === 0) {
+          el.innerHTML = `<p class="body">${t('Ei vielä dataa', 'No data yet')}</p>`;
+          return;
+        }
+        el.innerHTML =
+          `<div class="tHead"><div class="tK">${t('Kertaa','Times')}</div><div class="tA">${t('Aihe','Topic')}</div></div>` +
+          rows.map(r => `
+            <div class="tRow">
+              <div class="tK">${r.kertaa}</div>
+              <div class="tA">${r.aihe}</div>
+            </div>
+          `).join('');
+      }
+
+      // Eniten puhuttu: count in first column
+      function renderTopicsTable(el, topics) {
+        if (!topics || topics.length === 0) {
+          el.innerHTML = `<p class="body">${t('Ei vielä dataa', 'No data yet')}</p>`;
+          return;
+        }
+        const rows = topics.map(t => ({ kertaa: t.count, aihe: t.topic }));
+        renderTable2(el, rows);
+      }
+
+      function renderAgreementTable(el, data) {
+        const disagreements = (data?.disagreements || []).filter(Boolean);
+        const saved = loadSaved('disagreements');
+        el.innerHTML = '';
+
+        const unsaved = disagreements.filter(d => !saved.includes(d));
+        if (unsaved.length === 0 && saved.length === 0) {
+          el.innerHTML = `<p class="body">${t('Ei vielä dataa', 'No data yet')}</p>`;
+          return;
+        }
+
+        for (const d of unsaved) {
+          const row = document.createElement('div');
+          row.className = 'tRow';
+          row.style.cssText = 'display:flex;align-items:flex-start;gap:8px';
+          const textEl = document.createElement('div');
+          textEl.className = 'tA'; textEl.style.flex = '1';
+          textEl.textContent = d;
+          const star = document.createElement('button');
+          star.className = 'star-btn';
+          star.setAttribute('aria-label', 'Tallenna');
+          star.textContent = '☆';
+          star.addEventListener('click', () => toggleSave('disagreements', d, star));
+          row.appendChild(textEl); row.appendChild(star);
+          el.appendChild(row);
+        }
+        renderSavedSection('disagreements');
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replaceAll("&","&amp;")
+          .replaceAll("<","&lt;")
+          .replaceAll(">","&gt;")
+          .replaceAll('"',"&quot;")
+          .replaceAll("'","&#039;");
+      }
+
+      function simpleMarkdown(text) {
+        const blocks = [];
+        let cur = null;
+        for (const line of String(text).split('\n')) {
+          const t = line.trim();
+          if (!t) continue;
+          if (t.startsWith('## ')) {
+            if (cur) blocks.push(cur);
+            cur = { raw_h: t.slice(3), h: escapeHtml(t.slice(3)), ps: [], raw_ps: [] };
+          } else if (cur) {
+            cur.ps.push(escapeHtml(t).replaceAll('**', ''));
+            cur.raw_ps.push(t.replaceAll('**', ''));
+          }
+        }
+        if (cur) blocks.push(cur);
+        if (blocks.length === 0) return `<p class="body">${escapeHtml(String(text))}</p>`;
+        return blocks.map(b => {
+          const synthData = JSON.stringify({h: b.raw_h, ps: b.raw_ps}).replace(/"/g, '&quot;');
+          return `<div class="synth-card" data-synth="${synthData}"><p class="synth-h">${b.h}</p>${b.ps.map(p => `<p class="synth-p">${p}</p>`).join('')}</div>`;
+        }).join('');
+      }
+
+      function attachSynthStars() {
+        document.querySelectorAll('#synthesisText .synth-card').forEach(card => {
+          if (card.querySelector('.star-btn')) return;
+          const text = card.dataset.synth;
+          if (!text) return;
+          const saved = isSaved('synth', text);
+          const star = document.createElement('button');
+          star.className = 'star-btn' + (saved ? ' starred' : '');
+          star.setAttribute('aria-label', saved ? 'Poista tallennetuista' : 'Tallenna');
+          star.textContent = saved ? '★' : '☆';
+          star.addEventListener('click', () => toggleSave('synth', text, star));
+          const synth_h = card.querySelector('.synth-h');
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;gap:6px';
+          card.insertBefore(row, synth_h);
+          row.appendChild(synth_h);
+          row.appendChild(star);
+        });
+      }
+
+      const views = {
+        gaps: document.getElementById('viewGaps'),
+        synth: document.getElementById('viewSynth'),
+        analyysi: document.getElementById('viewAnalyysi'),
+        litteraatti: document.getElementById('viewLitteraatti'),
+        kuvat: document.getElementById('viewKuvat'),
+        diagramit: document.getElementById('viewDiagramit'),
+        chat: document.getElementById('viewChat'),
+        yhteenveto: document.getElementById('viewYhteenveto'),
+      };
+
+      const topButtons = Array.from(document.querySelectorAll('.topNav button'));
+      const tabButtons = Array.from(document.querySelectorAll('.nav button'));
+
+      const stageDefaults = { before: 'kuvat', during: 'gaps', after: 'litteraatti' };
+
+      function setStage(stage) {
+        topButtons.forEach(b => b.classList.toggle('active', b.dataset.stage === stage));
+
+        tabButtons.forEach(b => {
+          const show = b.dataset.stage === stage;
+          b.style.display = show ? '' : 'none';
+          b.classList.remove('active');
+        });
+
+        const defaultTab = stageDefaults[stage];
+
+        const btn = tabButtons.find(b => b.dataset.stage === stage && b.dataset.tab === defaultTab);
+        if (btn) {
+          btn.classList.add('active');
+          Object.values(views).forEach(v => v.style.display = 'none');
+          views[defaultTab].style.display = 'block';
+
+          // Auto-load transcript when entering Litteraatti view via stage default
+          if (defaultTab === 'litteraatti') ensureTranscriptLoaded();
+        }
+
+      }
+
+      topButtons.forEach(btn => btn.addEventListener('click', () => {
+        setStage(btn.dataset.stage);
+        localStorage.setItem('nav_stage', btn.dataset.stage);
+        localStorage.setItem('nav_tab', stageDefaults[btn.dataset.stage]);
+      }));
+
+      tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tab = btn.dataset.tab;
+          const stage = btn.dataset.stage;
+
+          setStage(stage);
+
+          tabButtons.filter(b => b.dataset.stage === stage).forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          Object.values(views).forEach(v => v.style.display = 'none');
+          views[tab].style.display = 'block';
+
+          localStorage.setItem('nav_stage', stage);
+          localStorage.setItem('nav_tab', tab);
+
+          fetch(`${API_BASE}/api/log`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({tab})}).catch(()=>{});
+
+          if (tab === 'litteraatti') loadTranscript();
+          if (tab === 'yhteenveto') loadSavedInsights();
+        });
+      });
+
+      const duringTabOrder = ['gaps', 'synth', 'analyysi'];
+      document.addEventListener('keydown', (e) => {
+        const activeDuring = tabButtons.find(b => b.dataset.stage === 'during' && b.classList.contains('active'));
+        if (!activeDuring) return;
+        const cur = duringTabOrder.indexOf(activeDuring.dataset.tab);
+        if (cur === -1) return;
+        let next = -1;
+        if (['ArrowRight', 'ArrowDown', 'PageDown'].includes(e.key)) next = (cur + 1) % duringTabOrder.length;
+        else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) next = (cur - 1 + duringTabOrder.length) % duringTabOrder.length;
+        if (next === -1) return;
+        e.preventDefault();
+        const nextBtn = tabButtons.find(b => b.dataset.tab === duringTabOrder[next]);
+        if (nextBtn) { nextBtn.click(); nextBtn.focus(); }
+      });
+
+      function loadStructured() {
+        fetch(`${API_BASE}/api/structured`)
+          .then(r => r.json())
+          .then(data => {
+            renderList(document.getElementById("gapsList"), data.gaps, 'gaps');
+            renderList(document.getElementById("assumptionsList"), data.assumptions, 'assumptions');
+            renderSavedSection('gaps');
+            renderSavedSection('assumptions');
+            document.getElementById('synthesisText').innerHTML = simpleMarkdown(data.synthesis || t('Ei vielä synteesiä', 'No synthesis yet'));
+            attachSynthStars();
+            renderSavedSection('synth');
+
+            document.getElementById("badgeGaps").textContent = String(data.gaps.length);
+            document.getElementById("badgeAssumptions").textContent = String(data.assumptions.length);
+
+            const tsEl = document.getElementById('gapsTimestamp');
+            if (data.timestamp) {
+              const ts = new Date(data.timestamp.replace(' ', 'T'));
+              const timeStr = ts.toLocaleTimeString('fi-FI', {hour: '2-digit', minute: '2-digit'});
+              const mins = Math.floor((Date.now() - ts.getTime()) / 60000);
+              const ago = mins < 1 ? t('juuri äsken', 'just now') : t(`${mins} min sitten`, `${mins} min ago`);
+              tsEl.textContent = t(`Päivitetty ${timeStr}, ${ago}`, `Updated ${timeStr}, ${ago}`);
+            } else {
+              tsEl.textContent = '';
+            }
+          })
+          .catch(err => console.error('Failed to load structured data:', err));
+      }
+
+      function ensureTranscriptLoaded() { loadTranscript(); }
+
+      async function loadTranscript() {
+        const content = document.getElementById('transcriptContent');
+        const badge = document.getElementById('chunkCount');
+
+        try {
+          content.textContent = t('Ladataan...', 'Loading...');
+          const r = await fetch(`${API_BASE}/api/transcript`);
+          const data = await r.json();
+
+          if (data.error) {
+            content.textContent = t('Ei vielä litteraattia', 'No transcript yet');
+            badge.textContent = '0';
+          } else {
+            content.textContent = data.transcript;
+            badge.textContent = String(data.chunk_count);
+          }
+        } catch (err) {
+          console.error('Failed to load transcript:', err);
+          content.textContent = t('Virhe ladattaessa', 'Error loading');
+        }
+      }
+
+      function loadAnalysis() {
+        fetch(`${API_BASE}/api/analysis`)
+          .then(r => r.json())
+          .then(data => {
+            renderTopicsTable(document.getElementById('topicsTable'), data.topics);
+            renderAgreementTable(document.getElementById('agreementTable'), data);
+          })
+          .catch(err => {
+            console.error('Failed to load analysis:', err);
+            document.getElementById('topicsTable').innerHTML = `<p class="body">${t('Virhe ladattaessa','Error loading')}</p>`;
+            document.getElementById('agreementTable').innerHTML = `<p class="body">${t('Virhe ladattaessa','Error loading')}</p>`;
+          });
+      }
+
+      document.getElementById('btnDownloadTranscript').addEventListener('click', async () => {
+        const r = await fetch(`${API_BASE}/api/transcript`);
+        const data = await r.json();
+        if (data.error || !data.transcript) return;
+        const blob = new Blob([data.transcript], {type: 'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'litteraatti.txt'; a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      // Auto-refresh polling — interval is updated dynamically from chunk_duration in recorder-status
+      const POLL_MS = 60000;
+      let intervals = [];
+
+      function startPolling() {
+        intervals.push(setInterval(loadStructured, POLL_MS));
+        intervals.push(setInterval(loadAnalysis,   POLL_MS));
+      }
+      function stopPolling() {
+        intervals.forEach(clearInterval);
+        intervals = [];
+      }
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopPolling();
+        else { loadStructured(); loadAnalysis(); startPolling(); }
+      });
+
+      // Recording indicator
+      let _recStartedAt = null;
+      let _recTimerInterval = null;
+      let _recChunk = 0;
+
+      function fmtDuration(ms) {
+        const s = Math.floor(ms / 1000);
+        const h = Math.floor(s / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        const sec = s % 60;
+        const mm = String(m).padStart(2,'0');
+        const ss = String(sec).padStart(2,'0');
+        return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+      }
+
+      function checkRecorderStatus() {
+        fetch(`${API_BASE}/api/recorder-status`)
+          .then(r => r.json())
+          .then(data => {
+            const el = document.getElementById('recIndicator');
+            const label = document.getElementById('recLabel');
+            if (data.recording && data.started_at) {
+              _recStartedAt = new Date(data.started_at);
+              _recChunk = data.chunk || 0;
+              el.style.display = 'flex';
+              if (!_recTimerInterval) {
+                _recTimerInterval = setInterval(() => {
+                  const elapsed = Date.now() - _recStartedAt.getTime();
+                  label.textContent = 'REC ' + fmtDuration(elapsed);
+                }, 1000);
+              }
+            } else {
+              el.style.display = 'none';
+              if (_recTimerInterval) { clearInterval(_recTimerInterval); _recTimerInterval = null; }
+            }
+          })
+          .catch(() => {});
+      }
+      checkRecorderStatus();
+      setInterval(checkRecorderStatus, 5000);
+
+
+      // System status (battery + disk)
+      function checkSystemStatus() {
+        fetch(`${API_BASE}/api/system-status`)
+          .then(r => r.json())
+          .then(data => {
+            const bb = document.getElementById('batteryBanner');
+            const db = document.getElementById('diskBanner');
+            if (data.battery_pct !== null && !data.battery_ok) {
+              const c = data.charging ? '⚡ charging' : '🔋 NOT charging';
+              bb.textContent = `⚠ Battery low: ${data.battery_pct}% — ${c}. Plug in charger!`;
+              bb.style.display = 'block';
+            } else {
+              bb.style.display = 'none';
+            }
+            if (!data.disk_ok) {
+              db.textContent = `⚠ Low disk space: ${data.disk_free_gb} GB free (~${data.disk_hours}h of audio remaining)`;
+              db.style.display = 'block';
+            } else {
+              db.style.display = 'none';
+            }
+          })
+          .catch(() => {});
+      }
+      checkSystemStatus();
+      setInterval(checkSystemStatus, 30000);
+
+      // Microphone status
+      function checkMicStatus() {
+        fetch(`${API_BASE}/api/mic-status`)
+          .then(r => r.json())
+          .then(data => {
+            const mb = document.getElementById('micBanner');
+            if (!data.ok) {
+              mb.textContent = `🎤 ${data.message}`;
+              mb.style.display = 'block';
+            } else {
+              mb.style.display = 'none';
+            }
+          })
+          .catch(() => {});
+      }
+      checkMicStatus();
+      setInterval(checkMicStatus, 5000);
+
+      // Initial load + start polling
+      applyLang();
+      checkSession();
+      loadStructured();
+      loadAnalysis();
+      renderSavedSection('gaps');
+      renderSavedSection('assumptions');
+      setInterval(checkSession, 30000);
+      startPolling();
+
+      // Restore last navigation position (or default to 'before')
+      const _stage = localStorage.getItem('nav_stage') || 'before';
+      const _tab   = localStorage.getItem('nav_tab');
+      setStage(_stage);
+      if (_tab && _tab !== stageDefaults[_stage]) {
+        const _btn = tabButtons.find(b => b.dataset.stage === _stage && b.dataset.tab === _tab);
+        if (_btn) {
+          tabButtons.filter(b => b.dataset.stage === _stage).forEach(b => b.classList.remove('active'));
+          _btn.classList.add('active');
+          Object.values(views).forEach(v => v.style.display = 'none');
+          views[_tab].style.display = 'block';
+          if (_tab === 'litteraatti') ensureTranscriptLoaded();
+          if (_tab === 'yhteenveto') loadSavedInsights();
+        }
+      }
+      // ── Yhteenveto ──────────────────────────────────────────────────
+      const DEFAULT_PROMPT_FI =
+`Luo tiivis kattava yhteenveto alla olevasta suomalaisen työpajan litteraatista. Yhteenveto tulisi:
+- Esittää tärkeimmät keskustelupisteet selkeästi
+- Korostaa tärkeimmät päätökset tai johtopäätökset
+- Mainita tunnistetut haasteet tai kysymykset
+- Olla kirjoitettu suomeksi, ammatillisessa mutta selkeässä tyylissä
+- Olla pituudeltaan 100-200 sanaa`;
+
+      const DEFAULT_PROMPT_EN =
+`Create a concise comprehensive summary of the workshop transcript below. The summary should:
+- Present the most important discussion points clearly
+- Highlight key decisions or conclusions
+- Mention identified challenges or questions
+- Be written in English, in a professional but clear style
+- Be 100-200 words in length`;
+
+      const promptEl = document.getElementById('yhteenvetoPrompt');
+      promptEl.value = localStorage.getItem('yhteenvetoPrompt') || DEFAULT_PROMPT_FI;
+      promptEl.addEventListener('input', () => localStorage.setItem('yhteenvetoPrompt', promptEl.value));
+
+      function _applyLangDefaultPrompt(lang) {
+        const def = lang === 'en' ? DEFAULT_PROMPT_EN : DEFAULT_PROMPT_FI;
+        const stored = localStorage.getItem('yhteenvetoPrompt');
+        if (!stored || stored === DEFAULT_PROMPT_FI || stored === DEFAULT_PROMPT_EN) {
+          promptEl.value = def;
+        }
+      }
+      fetch(`${API_BASE}/api/session-language`)
+        .then(r => r.json())
+        .then(d => _applyLangDefaultPrompt(d.language || 'fi'))
+        .catch(() => {});
+
+      document.getElementById('btnTogglePrompt').addEventListener('click', () => {
+        const section = document.getElementById('promptSection');
+        const btn = document.getElementById('btnTogglePrompt');
+        const open = section.style.display === 'none';
+        section.style.display = open ? 'block' : 'none';
+        btn.querySelector('[data-fi]').textContent = open ? t('Piilota prompti', 'Hide prompt') : t('Katso ja muokkaa prompti', 'View and edit prompt');
+      });
+
+      document.getElementById('btnLuoYhteenveto').addEventListener('click', async () => {
+        const btn     = document.getElementById('btnLuoYhteenveto');
+        const result  = document.getElementById('yhteenvetoResult');
+        const text    = document.getElementById('yhteenvetoText');
+        const dlBtn   = document.getElementById('btnDownloadYhteenveto');
+        const prompt  = document.getElementById('yhteenvetoPrompt').value.trim();
+
+        if (!prompt) { alert(t('Prompti on tyhjä.', 'Prompt is empty.')); return; }
+
+        btn.textContent = t('Luodaan…', 'Creating…');
+        btn.disabled = true;
+        result.style.display = 'block';
+        text.textContent = 'Ladataan…';
+        dlBtn.style.display = 'none';
+
+        try {
+          const r = await fetch(`${API_BASE}/api/yhteenveto`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
+          });
+          const data = await r.json();
+          if (data.error) {
+            text.textContent = `Virhe: ${data.error}`;
+          } else {
+            text.textContent = data.yhteenveto;
+            dlBtn.style.display = '';
+            dlBtn._content = data.yhteenveto;
+          }
+        } catch (err) {
+          text.textContent = t('Verkkovirhe. Tarkista yhteys.', 'Network error. Check connection.');
+          console.error(err);
+        } finally {
+          btn.textContent = t('Luo yhteenveto', 'Create summary');
+          btn.disabled = false;
+        }
+      });
+
+      document.getElementById('btnDownloadYhteenveto').addEventListener('click', async () => {
+        const dlBtn  = document.getElementById('btnDownloadYhteenveto');
+        const content = dlBtn._content || document.getElementById('yhteenvetoText').textContent;
+        if (!content) return;
+
+        if (window.showSaveFilePicker) {
+          try {
+            const handle = await window.showSaveFilePicker({
+              suggestedName: 'yhteenveto.txt',
+              types: [{ description: 'Tekstitiedosto', accept: { 'text/plain': ['.txt'] } }]
+            });
+            const writable = await handle.createWritable();
+            await writable.write(content);
+            await writable.close();
+          } catch (e) {
+            if (e.name !== 'AbortError') console.error(e);
+          }
+        } else {
+          // Fallback for browsers without File System Access API
+          const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+          const url  = URL.createObjectURL(blob);
+          const a    = document.createElement('a');
+          a.href = url; a.download = 'yhteenveto.txt'; a.click();
+          URL.revokeObjectURL(url);
+        }
+      });
+      // ── Kuvat / Image generation ─────────────────────────────────────
+      let _activeImageProvider = 'openai';
+      const imageProviderBtns = Array.from(document.querySelectorAll('#imageProviderNav button'));
+
+      // Disable OpenAI buttons if key not configured
+      fetch(`${API_BASE}/api/image-providers`)
+        .then(r => r.json())
+        .then(avail => {
+          if (!avail.openai) {
+            ['btnProviderOpenai', 'btnProviderBoth'].forEach(id => {
+              const btn = document.getElementById(id);
+              btn.disabled = true;
+              btn.style.opacity = '0.4';
+              btn.title = 'OPENAI_API_KEY ei ole asetettu';
+            });
+          }
+        })
+        .catch(() => {});
+
+      imageProviderBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.disabled) return;
+          imageProviderBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          _activeImageProvider = btn.dataset.provider;
+        });
+      });
+
+      document.getElementById('btnGenerateImage').addEventListener('click', async () => {
+        const prompt = document.getElementById('imagePrompt').value.trim();
+        if (!prompt) { alert(t('Kirjoita ensin prompti.', 'Write a prompt first.')); return; }
+
+        const btn     = document.getElementById('btnGenerateImage');
+        const status  = document.getElementById('imageGenStatus');
+        const results = document.getElementById('imageResults');
+
+        btn.disabled = true;
+        btn.textContent = 'Generoidaan\u2026';
+        status.textContent = '';
+        results.style.display = 'none';
+        results.innerHTML = '';
+
+        try {
+          const r = await fetch(`${API_BASE}/api/generate-image`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt, provider: _activeImageProvider }),
+          });
+          const data = await r.json();
+
+          if (data.error) {
+            status.textContent = `Virhe: ${data.error}`;
+            return;
+          }
+
+          const cards = [];
+          if (data.gemini)      cards.push(makeImageCard('Gemini Flash', data.gemini, 'image/png'));
+          if (data.openai)      cards.push(makeImageCard('OpenAI DALL\u00b7E\u00a03', data.openai, 'image/png'));
+
+          const errors = [
+            data.gemini_error ? `Gemini: ${data.gemini_error}` : '',
+            data.openai_error ? `OpenAI: ${data.openai_error}` : '',
+          ].filter(Boolean).join('  \u2014  ');
+          if (errors) status.textContent = errors;
+
+          if (cards.length > 0) {
+            results.style.display = 'grid';
+            results.style.gridTemplateColumns = cards.length === 2 ? '1fr 1fr' : '1fr';
+            results.style.gap = '16px';
+            cards.forEach(c => results.appendChild(c));
+          }
+        } catch (err) {
+          status.textContent = t('Verkkovirhe. Tarkista yhteys.', 'Network error. Check connection.');
+          console.error(err);
+        } finally {
+          btn.textContent = t('Generoi kuva', 'Generate image');
+          btn.disabled = false;
+        }
+      });
+
+      function makeImageCard(label, b64, mime) {
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex;flex-direction:column;gap:10px';
+
+        const labelEl = document.createElement('p');
+        labelEl.style.cssText = 'margin:0;font-size:11px;font-weight:800;color:rgba(0,0,0,.4);text-transform:uppercase;letter-spacing:.06em';
+        labelEl.textContent = label;
+
+        const img = document.createElement('img');
+        img.src = `data:${mime};base64,${b64}`;
+        img.style.cssText = 'width:100%;border-radius:16px;display:block;box-shadow:0 4px 24px rgba(0,0,0,.12)';
+        img.alt = 'Generoitu kuva';
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'btn';
+        saveBtn.textContent = 'Tallenna kuva';
+        saveBtn.addEventListener('click', () => saveImage(b64, mime));
+
+        div.appendChild(labelEl);
+        div.appendChild(img);
+        div.appendChild(saveBtn);
+        return div;
+      }
+
+      async function saveImage(b64, mime) {
+        const ext = mime.split('/')[1] || 'png';
+        const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const filename = `kuva_${ts}.${ext}`;
+        const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+
+        if (window.showSaveFilePicker) {
+          try {
+            const handle = await window.showSaveFilePicker({
+              suggestedName: filename,
+              types: [{ description: 'Kuvatiedosto', accept: { [mime]: [`.${ext}`] } }],
+            });
+            const writable = await handle.createWritable();
+            await writable.write(bytes);
+            await writable.close();
+          } catch (e) {
+            if (e.name !== 'AbortError') console.error(e);
+          }
+        } else {
+          const blob = new Blob([bytes], { type: mime });
+          const url  = URL.createObjectURL(blob);
+          const a    = document.createElement('a');
+          a.href = url; a.download = filename; a.click();
+          URL.revokeObjectURL(url);
+        }
+      }
+      // ── Diagramit ────────────────────────────────────────────────────
+      document.getElementById('btnGenerateDiagram').addEventListener('click', async () => {
+        const prompt = document.getElementById('diagramPrompt').value.trim();
+        if (!prompt) { alert('Paste some text first.'); return; }
+
+        const btn    = document.getElementById('btnGenerateDiagram');
+        const status = document.getElementById('diagramStatus');
+
+        btn.disabled = true;
+        btn.textContent = 'Generating…';
+        status.textContent = 'LLM is thinking… (may take 1–2 min)';
+
+        try {
+          const r = await fetch(`${API_BASE}/api/diagramit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt }),
+          });
+
+          if (!r.ok) {
+            const err = await r.json().catch(() => ({}));
+            status.textContent = `Error: ${err.error || r.statusText}`;
+            return;
+          }
+
+          const blob = await r.blob();
+          const url  = URL.createObjectURL(blob);
+          const a    = document.createElement('a');
+          a.href = url;
+          a.download = 'diagram_assumptions.xlsx';
+          a.click();
+          URL.revokeObjectURL(url);
+          status.textContent = 'File will appear in your Downloads folder in 1–2 minutes.';
+        } catch (err) {
+          status.textContent = 'Network error. Check connection.';
+          console.error(err);
+        } finally {
+          btn.textContent = 'Generate & Download Excel';
+          btn.disabled = false;
+        }
+      });
+      // ── Tallennetut havainnot ────────────────────────────────────────
+      let _insightsForDownload = [];
+
+      const _INSIGHT_TYPE_LABELS = _lang === 'en'
+        ? { gaps: 'Knowledge gaps', assumptions: 'Assumptions', synth: 'Synthesis', disagreements: 'Disagreements' }
+        : { gaps: 'Tietoaukot', assumptions: 'Oletukset', synth: 'Synteesi', disagreements: 'Eri mieltä' };
+      const _INSIGHT_TYPE_ORDER  = ['gaps', 'assumptions', 'synth', 'disagreements'];
+
+      async function loadSavedInsights() {
+        const container = document.getElementById('savedInsightsContent');
+        if (!container) return;
+        container.innerHTML = `<p class="body" style="color:rgba(0,0,0,.4)">${t('Ladataan...','Loading...')}</p>`;
+        try {
+          const r = await fetch(`${API_BASE}/api/saved-insights`);
+          const entries = await r.json();
+          renderSavedInsights(entries);
+        } catch (err) {
+          container.innerHTML = `<p class="body" style="color:rgba(0,0,0,.4)">${t('Ei tallennettuja havaintoja','No saved insights')}</p>`;
+        }
+      }
+
+      function renderSavedInsights(entries) {
+        const container = document.getElementById('savedInsightsContent');
+        if (!container) return;
+
+        const grouped = {};
+        for (const e of entries) {
+          if (!grouped[e.type]) grouped[e.type] = [];
+          grouped[e.type].push(e.text);
+        }
+
+        const currentlySaved = {
+          gaps:          new Set(loadSaved('gaps')),
+          assumptions:   new Set(loadSaved('assumptions')),
+          synth:         new Set(loadSaved('synth')),
+          disagreements: new Set(loadSaved('disagreements')),
+        };
+
+        const starredItems   = {};
+        const unstarredItems = {};
+        for (const type of _INSIGHT_TYPE_ORDER) {
+          const items = grouped[type] || [];
+          starredItems[type]   = items.filter(t => currentlySaved[type].has(t));
+          unstarredItems[type] = items.filter(t => !currentlySaved[type].has(t));
+        }
+
+        const hasStarred   = _INSIGHT_TYPE_ORDER.some(t => starredItems[t].length   > 0);
+        const hasUnstarred = _INSIGHT_TYPE_ORDER.some(t => unstarredItems[t].length > 0);
+
+        if (!hasStarred && !hasUnstarred) {
+          container.innerHTML = `<p class="body" style="color:rgba(0,0,0,.4)">${t('Ei vielä tallennettuja havaintoja','No saved insights yet')}</p>`;
+          _insightsForDownload = [];
+          return;
+        }
+
+        _insightsForDownload = entries;
+
+        let html = '';
+        if (hasStarred) {
+          html += renderInsightGroup(starredItems, false);
+        }
+        if (hasUnstarred) {
+          if (hasStarred) html += '<hr style="border:none;border-top:1px solid rgba(0,0,0,.18);margin:18px 0">';
+          html += `<p style="margin:0 0 12px;font-size:14px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:rgba(0,0,0,.78)">${t('Poistettu tallennetusta listasta','Removed from saved list')}</p>`;
+          html += renderInsightGroup(unstarredItems, true);
+        }
+        container.innerHTML = html;
+      }
+
+      function renderInsightGroup(grouped, dimmed) {
+        let html = '';
+        const wrapStyle = '';
+        for (const type of _INSIGHT_TYPE_ORDER) {
+          const items = grouped[type] || [];
+          if (items.length === 0) continue;
+          const label = escapeHtml(_INSIGHT_TYPE_LABELS[type]);
+          html += `<div style="${wrapStyle}margin-bottom:16px">`;
+          html += `<p style="margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:rgba(0,0,0,.45)">${label}</p>`;
+          html += '<ul style="margin:0;padding:0;list-style:none;display:grid;gap:8px">';
+          for (const text of items) {
+            if (type === 'synth') {
+              let block;
+              try { block = JSON.parse(text); } catch { block = {h: text, ps: []}; }
+              const safe_h = escapeHtml(block.h || '');
+              const safe_ps = (block.ps || []).map(p => escapeHtml(p));
+              html += `<li style="display:flex;gap:8px;align-items:flex-start">`;
+              html += `<span style="margin-top:8px;width:6px;height:6px;border-radius:50%;background:rgba(0,0,0,.25);flex-shrink:0;display:inline-block"></span>`;
+              html += `<div><p style="margin:0;font-size:15px;font-weight:500;line-height:1.5;color:rgba(0,0,0,.8)">${safe_h}</p>`;
+              for (const p of safe_ps) html += `<p style="margin:2px 0 0;font-size:13px;color:rgba(0,0,0,.6);line-height:1.4">${p}</p>`;
+              html += '</div></li>';
+            } else {
+              const safe = escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<span style="font-weight:500">$1</span>');
+              html += `<li style="display:flex;gap:8px;align-items:flex-start">`;
+              html += `<span style="margin-top:8px;width:6px;height:6px;border-radius:50%;background:rgba(0,0,0,.25);flex-shrink:0;display:inline-block"></span>`;
+              html += `<p style="margin:0;font-size:15px;line-height:1.5;color:rgba(0,0,0,.8)">${safe}</p>`;
+              html += '</li>';
+            }
+          }
+          html += '</ul></div>';
+        }
+        return html;
+      }
+
+      document.getElementById('btnDownloadInsights').addEventListener('click', () => {
+        if (!_insightsForDownload.length) return;
+
+        const grouped = {};
+        for (const e of _insightsForDownload) {
+          if (!grouped[e.type]) grouped[e.type] = [];
+          grouped[e.type].push(e.text);
+        }
+
+        const currentlySaved = {
+          gaps:          new Set(loadSaved('gaps')),
+          assumptions:   new Set(loadSaved('assumptions')),
+          synth:         new Set(loadSaved('synth')),
+          disagreements: new Set(loadSaved('disagreements')),
+        };
+
+        function formatItem(type, text) {
+          if (type === 'synth') {
+            try {
+              const b = JSON.parse(text);
+              let s = `• ${b.h || ''}\n`;
+              for (const p of (b.ps || [])) s += `  ${p}\n`;
+              return s;
+            } catch { return `• ${text}\n`; }
+          }
+          return `• ${text}\n`;
+        }
+
+        let out = 'TALLENNETUT HAVAINNOT\n' + '='.repeat(40) + '\n\n';
+
+        let hasStarred = false;
+        for (const type of _INSIGHT_TYPE_ORDER) {
+          const items = (grouped[type] || []).filter(t => currentlySaved[type].has(t));
+          if (!items.length) continue;
+          if (!hasStarred) { out += 'TÄHDISTETYT\n' + '-'.repeat(20) + '\n\n'; hasStarred = true; }
+          out += _INSIGHT_TYPE_LABELS[type].toUpperCase() + '\n';
+          for (const item of items) out += formatItem(type, item);
+          out += '\n';
+        }
+
+        let hasUnstarred = false;
+        for (const type of _INSIGHT_TYPE_ORDER) {
+          const items = (grouped[type] || []).filter(t => !currentlySaved[type].has(t));
+          if (!items.length) continue;
+          if (!hasUnstarred) { out += '\nPOISTETTU TÄHDISTÄ\n' + '-'.repeat(20) + '\n\n'; hasUnstarred = true; }
+          out += _INSIGHT_TYPE_LABELS[type].toUpperCase() + '\n';
+          for (const item of items) out += formatItem(type, item);
+          out += '\n';
+        }
+
+        const blob = new Blob([out], {type: 'text/plain;charset=utf-8'});
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url; a.download = 'tallennetut_havainnot.txt'; a.click();
+        URL.revokeObjectURL(url);
+      });
+      // ── Chat ────────────────────────────────────────────────────────
+      let _chatHistory = [];
+
+      function _appendChatMsg(role, content) {
+        const msgs = document.getElementById('chatMessages');
+        const div = document.createElement('div');
+        div.className = `chat-msg ${role}`;
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble';
+        bubble.textContent = content;
+        div.appendChild(bubble);
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+        return bubble;
+      }
+
+      async function sendChatMessage() {
+        const input = document.getElementById('chatInput');
+        const btn = document.getElementById('btnSendChat');
+        const msg = input.value.trim();
+        if (!msg || btn.disabled) return;
+
+        input.value = '';
+        input.style.height = 'auto';
+        btn.disabled = true;
+
+        _appendChatMsg('user', msg);
+
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'chat-msg assistant loading';
+        const loadingBubble = document.createElement('div');
+        loadingBubble.className = 'chat-bubble';
+        loadingBubble.textContent = '…';
+        loadingDiv.appendChild(loadingBubble);
+        document.getElementById('chatMessages').appendChild(loadingDiv);
+        document.getElementById('chatMessages').scrollTop = 99999;
+
+        try {
+          const r = await fetch(`${API_BASE}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg, history: _chatHistory })
+          });
+          const data = await r.json();
+          loadingDiv.classList.remove('loading');
+          if (data.error) {
+            loadingBubble.textContent = `Virhe: ${data.error}`;
+          } else {
+            const safe = data.response.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            loadingBubble.innerHTML = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            _chatHistory.push({ role: 'user', content: msg });
+            _chatHistory.push({ role: 'assistant', content: data.response });
+            if (data.model_used) {
+              document.getElementById('chatModelLabel').textContent = data.model_used;
+            }
+          }
+        } catch (err) {
+          loadingDiv.classList.remove('loading');
+          loadingBubble.textContent = 'Verkkovirhe. Tarkista yhteys.';
+        } finally {
+          btn.disabled = false;
+          input.focus();
+          document.getElementById('chatMessages').scrollTop = 99999;
+        }
+      }
+
+      document.getElementById('btnSendChat').addEventListener('click', sendChatMessage);
+      document.getElementById('chatInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
+      });
+      document.getElementById('chatInput').addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+      });
+    </script>
+  </body>
+</html>

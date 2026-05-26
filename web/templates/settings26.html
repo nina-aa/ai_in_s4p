@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="fi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Asetukset — AI assistentti</title>
+    <style>
+      :root {
+        --page-bg: #f2f2f7;
+        --text: rgba(0,0,0,.92);
+        --card-solid: #fff;
+        --shadow: 0 1px 0 rgba(0,0,0,.06),0 18px 60px rgba(0,0,0,.1);
+      }
+      * { box-sizing: border-box }
+      html, body { height: 100% }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+        color: var(--text);
+        background: var(--page-bg);
+      }
+      .page {
+        min-height: 100vh; padding: 8px;
+        background:
+          radial-gradient(1100px 600px at 15% -10%, rgba(0,122,255,.16), transparent 60%),
+          radial-gradient(900px 500px at 95% 10%, rgba(175,82,222,.14), transparent 55%),
+          radial-gradient(1000px 600px at 50% 115%, rgba(52,199,89,.1), transparent 55%),
+          var(--page-bg);
+      }
+      .wrap { min-height: calc(100vh - 16px); display: flex; flex-direction: column }
+      .frame { flex: 1; display: flex; flex-direction: column; border-radius: 44px; padding: 5px; background: rgba(0,0,0,.1) }
+      .device {
+        flex: 1; border-radius: 40px; overflow: hidden;
+        background: var(--card-solid); border: 1px solid rgba(0,0,0,.1);
+        box-shadow: var(--shadow);
+      }
+      .chrome {
+        padding: 12px 24px;
+        background: rgba(255,255,255,.65);
+        -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+        border-bottom: 1px solid rgba(0,0,0,.1);
+      }
+      .chromeRow { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap }
+      .brand { display: flex; align-items: center; gap: 12px }
+      .logo {
+        width: 40px; height: 40px; border-radius: 16px;
+        display: grid; place-items: center;
+        background: #111; color: #fff;
+        box-shadow: 0 6px 20px rgba(0,0,0,.18);
+        font-weight: 700; font-size: 15px; letter-spacing: .02em;
+      }
+      .title  { font-size: 20px; font-weight: 700; letter-spacing: -.01em; line-height: 1.1 }
+      .subtitle { margin-top: 4px; font-size: 14px; color: rgba(0,0,0,.6) }
+
+      .btn {
+        appearance: none; border: 1px solid rgba(0,0,0,.12);
+        background: rgba(255,255,255,.7);
+        -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+        border-radius: 999px; padding: 8px 16px;
+        font-size: 15px; font-weight: 750; color: rgba(0,0,0,.8);
+        cursor: pointer; text-decoration: none; display: inline-block;
+      }
+      .btn:active { transform: translateY(1px) }
+
+      .content { padding: 10px }
+      @media (min-width: 768px) { .content { padding: 14px } }
+      .inner { display: grid; gap: 8px; max-width: 720px; margin: 0 auto }
+
+      /* ── Setting rows — label left-aligned, control follows immediately ── */
+      .setting-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 12px;
+        padding: 6px 0;
+        border-bottom: 1px solid rgba(0,0,0,.06);
+      }
+      .setting-row:last-child { border-bottom: none }
+
+      /* Fixed-width label column so all controls start at the same x position.
+         Width is set to fit the longest label ("Whisper mallin koko" + ⓘ). */
+      .setting-label {
+        flex: 0 0 200px;
+        display: flex; align-items: center; gap: 6px;
+        font-size: 15px; font-weight: 700; color: var(--text);
+      }
+      /* AI model row: label full-width so grid sits below */
+      .setting-row.row-ai { flex-direction: column; align-items: flex-start }
+      .setting-row.row-ai .setting-label { flex: 0 0 auto }
+
+      .req { color: #ff3b30 }
+      .opt { font-size: 12px; font-weight: 600; color: rgba(0,0,0,.38); letter-spacing: .01em }
+
+      /* ── Segmented controls ── */
+      .seg-ctrl {
+        display: inline-flex; flex-wrap: wrap; gap: 3px;
+        padding: 3px; border-radius: 999px;
+        background: rgba(0,0,0,.06);
+      }
+      .seg-opt {
+        appearance: none; border: 0; background: transparent;
+        padding: 7px 12px; border-radius: 999px;
+        font-size: 14px; font-weight: 700; color: rgba(0,0,0,.65); cursor: pointer;
+        transition: background .12s, color .12s, box-shadow .12s;
+      }
+      .seg-opt.active { background: #111; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.15) }
+
+      .ai-grid {
+        display: flex; flex-wrap: wrap; gap: 4px;
+        padding: 4px; border-radius: 18px;
+        background: rgba(0,0,0,.06);
+      }
+      .ai-opt {
+        appearance: none; border: 0; background: transparent;
+        padding: 7px 12px; border-radius: 12px;
+        font-size: 14px; font-weight: 700; color: rgba(0,0,0,.65); cursor: pointer;
+        transition: background .12s, color .12s, box-shadow .12s;
+      }
+      .ai-opt.active { background: #111; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.15) }
+
+      /* ── Tooltip ── */
+      .tip-btn {
+        appearance: none; border: 0;
+        background: rgba(0,0,0,.07); border-radius: 50%;
+        width: 17px; height: 17px; flex-shrink: 0;
+        font-size: 10px; color: rgba(0,0,0,.5); cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        line-height: 1;
+      }
+      .tip-box {
+        display: none; flex: 0 0 100%;
+        padding: 10px 14px; margin-top: 2px;
+        background: rgba(0,0,0,.05); border-radius: 12px;
+        font-size: 13px; color: rgba(0,0,0,.6); line-height: 1.55;
+      }
+      .tip-box.open { display: block }
+
+      /* ── Recording banner ── */
+      @keyframes recPulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+      .rec-banner {
+        display: none; align-items: center; gap: 8px;
+        padding: 12px 16px; border-radius: 14px;
+        background: rgba(255,59,48,.07); border: 1px solid rgba(255,59,48,.2);
+        font-size: 14px; font-weight: 700; color: #ff3b30;
+      }
+      .rec-banner.show { display: flex }
+      .rec-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff3b30; flex-shrink: 0; animation: recPulse 1.4s ease-in-out infinite }
+
+      .form-disabled .setting-row { opacity: .5; pointer-events: none }
+
+      .start-btn {
+        width: 100%; padding: 16px; border: 0; border-radius: 18px;
+        background: #111; color: #fff;
+        font-size: 17px; font-weight: 800; letter-spacing: -.01em;
+        cursor: pointer; box-shadow: 0 6px 24px rgba(0,0,0,.18);
+      }
+      .start-btn:disabled { opacity: .35; cursor: default }
+
+      .stop-btn {
+        width: 100%; padding: 14px; border: 0; border-radius: 18px;
+        background: #ff3b30; color: #fff;
+        font-size: 16px; font-weight: 800; letter-spacing: -.01em;
+        cursor: pointer;
+      }
+      .stop-btn:disabled { opacity: .35; cursor: default }
+
+      @supports (-webkit-font-smoothing: antialiased) {
+        body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page">
+      <div class="wrap">
+        <div class="frame">
+          <div class="device">
+
+            <header class="chrome">
+              <div class="chromeRow">
+                <div class="brand">
+                  <div class="logo" aria-hidden="true">AI</div>
+                  <div>
+                    <div class="title" data-fi="Asetukset" data-en="Settings">Asetukset</div>
+                    <div class="subtitle" data-fi="AI assistentti" data-en="AI assistant">AI assistentti</div>
+                  </div>
+                </div>
+                <a href="/" class="btn" data-fi="← Takaisin" data-en="← Back">← Takaisin</a>
+              </div>
+            </header>
+
+            <main class="content">
+              <div class="inner">
+
+                <!-- Stop + pienryhmä (shown only when recording) -->
+                <div id="topControls" style="display:none;align-items:center;gap:10px;flex-wrap:wrap">
+                  <button type="button" id="btnAloitaPienryhma"
+                    style="appearance:none;border:0;background:#111;color:#fff;border-radius:18px;padding:10px 18px;font-size:15px;font-weight:800;cursor:pointer;flex-shrink:0">Aloita pienryhmä</button>
+                  <div id="pienryhmaStatus" style="visibility:hidden;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:rgba(0,0,0,.55);white-space:nowrap">
+                    <span style="width:6px;height:6px;border-radius:50%;background:#ff3b30;flex-shrink:0;display:inline-block;animation:recPulse 1.4s ease-in-out infinite"></span>
+                    <span data-fi="Pienryhmä nyt" data-en="Small group active">Pienryhmä nyt</span>
+                  </div>
+                  <button type="button" id="btnStop"
+                    style="appearance:none;border:0;background:#ff3b30;color:#fff;border-radius:18px;padding:10px 18px;font-size:15px;font-weight:800;cursor:pointer;flex-shrink:0"
+                    data-fi="Lopeta sessio" data-en="Stop session">Lopeta sessio</button>
+                </div>
+
+                <!-- Recording active notice -->
+                <div id="recBanner" class="rec-banner">
+                  <span class="rec-dot"></span>
+                  <span data-fi="Työkalu tallentaa ääntä nyt. Jos haluat vaihtaa asetuksia, pitää lopettaa sessio."
+                        data-en="The tool is recording audio now. To change settings, you need to stop the session.">Työkalu tallentaa ääntä nyt. Jos haluat vaihtaa asetuksia, pitää lopettaa sessio.</span>
+                </div>
+
+                <p style="margin:0;font-size:14px;color:rgba(0,0,0,.45);text-align:center;line-height:1.5">
+                  <span data-fi="Oletusarvot sopivat useimpiin tilanteisiin, voit painaa vain Käynnistä sessio sivun alapuolella."
+                        data-en="Defaults work for most cases, just press Start session at the bottom of the page.">Oletusarvot sopivat useimpiin tilanteisiin, voit painaa vain Käynnistä sessio sivun alapuolella.</span>
+                </p>
+
+                <!-- Flat settings rows -->
+                <div id="settingsForm">
+
+                  <div class="setting-row">
+                    <div class="setting-label">
+                      Language
+                      <button type="button" class="tip-btn" data-tip="tip-lang">ⓘ</button>
+                    </div>
+                    <div class="seg-ctrl" id="ctrl-language">
+                      <button type="button" class="seg-opt active" data-value="fi">Suomi</button>
+                      <button type="button" class="seg-opt" data-value="en">English</button>
+                    </div>
+                    <div class="tip-box" id="tip-lang"
+                      data-fi="Valitse kieli, jolla puhutaan. Vaikuttaa Whisper-transkriptioon ja tekoälyn analyysikieleen."
+                      data-en="Select the spoken language. Affects Whisper transcription and AI analysis language.">Valitse kieli, jolla puhutaan. Vaikuttaa Whisper-transkriptioon ja tekoälyn analyysikieleen.</div>
+                  </div>
+
+                  <div class="setting-row">
+                    <div class="setting-label">
+                      <span data-fi="Ääni" data-en="Sound input">Ääni</span>
+                      <button type="button" class="tip-btn" data-tip="tip-ch">ⓘ</button>
+                    </div>
+                    <div class="seg-ctrl" id="ctrl-channels">
+                      <button type="button" class="seg-opt active" data-value="1">Mono</button>
+                      <button type="button" class="seg-opt" data-value="2">Stereo</button>
+                    </div>
+                    <div class="tip-box" id="tip-ch"
+                      data-fi="Mono riittää lähes aina. Käytä stereoa vain jos olet varma, että mikrofonisi on stereo."
+                      data-en="Mono is sufficient in almost all cases. Use stereo only if you are sure your microphone is stereo.">Mono riittää lähes aina. Käytä stereoa vain jos olet varma, että mikrofonisi on stereo.</div>
+                  </div>
+
+                  <div class="setting-row">
+                    <div class="setting-label">
+                      <span data-fi="Analyysin taajuus" data-en="Analysis frequency">Analyysin taajuus</span>
+                      <button type="button" class="tip-btn" data-tip="tip-chunk">ⓘ</button>
+                    </div>
+                    <div class="seg-ctrl" id="ctrl-chunk">
+                      <button type="button" class="seg-opt" data-value="60">1 min</button>
+                      <button type="button" class="seg-opt active" data-value="300">5 min</button>
+                      <button type="button" class="seg-opt" data-value="600">10 min</button>
+                    </div>
+                    <div class="tip-box" id="tip-chunk"
+                      data-fi="Kuinka usein ääni litteroidaan ja analysoidaan. 5 min on suositeltava."
+                      data-en="How often audio is transcribed and analysed. 5 min recommended.">Kuinka usein ääni litteroidaan ja analysoidaan. 5 min on suositeltava.</div>
+                  </div>
+
+                  <div class="setting-row">
+                    <div class="setting-label">
+                      <span data-fi="Whisper malli" data-en="Whisper model">Whisper malli</span>
+                      <button type="button" class="tip-btn" data-tip="tip-backend">ⓘ</button>
+                    </div>
+                    <div class="seg-ctrl" id="ctrl-backend">
+                      <button type="button" class="seg-opt active" data-value="mlx">mlx (Apple)</button>
+                      <button type="button" class="seg-opt" data-value="faster">faster-whisper</button>
+                      <button type="button" class="seg-opt" data-value="standard">standard</button>
+                    </div>
+                    <div class="tip-box" id="tip-backend"
+                      data-fi="&lt;strong&gt;faster-whisper small&lt;/strong&gt; sopii Windowsille ilman GPU:ta.&lt;br&gt;&lt;strong&gt;Standard Whisper&lt;/strong&gt; sopii Windowsille GPU:n kanssa.&lt;br&gt;&lt;strong&gt;mlx&lt;/strong&gt;: vain Apple koneelle."
+                      data-en="&lt;strong&gt;faster-whisper small&lt;/strong&gt; is for Windows with no GPU.&lt;br&gt;&lt;strong&gt;Standard Whisper&lt;/strong&gt; is for Windows with GPU.&lt;br&gt;&lt;strong&gt;mlx&lt;/strong&gt;: Apple only."><strong>faster-whisper small</strong> sopii Windowsille ilman GPU:ta.<br><strong>Standard Whisper</strong> sopii Windowsille GPU:n kanssa.<br><strong>mlx</strong>: vain Apple koneelle.</div>
+                  </div>
+
+                  <div class="setting-row">
+                    <div class="setting-label">
+                      <span data-fi="Whisper mallin koko" data-en="Whisper model size">Whisper mallin koko</span>
+                      <button type="button" class="tip-btn" data-tip="tip-size">ⓘ</button>
+                    </div>
+                    <div class="seg-ctrl" id="ctrl-model-size">
+                      <button type="button" class="seg-opt" data-value="small">small</button>
+                      <button type="button" class="seg-opt active" data-value="medium">medium</button>
+                      <button type="button" class="seg-opt" data-value="large">large</button>
+                    </div>
+                    <div class="tip-box" id="tip-size"
+                      data-fi="Medium on paras tasapaino nopeuden ja tarkkuuden välillä. Älä valitse large-mallia ellei sinulla ole runsaasti muistia (Mac yli 24 GB tai Windows GPU yli 16 GB)."
+                      data-en="Medium is the best balance of speed and accuracy. Do not pick large unless you are sure you have plenty of memory (Mac over 24 GB or Windows GPU over 16 GB).">Medium on paras tasapaino nopeuden ja tarkkuuden välillä. Älä valitse large-mallia ellei sinulla ole runsaasti muistia (Mac yli 24 GB tai Windows GPU yli 16 GB).</div>
+                  </div>
+
+                  <div class="setting-row row-ai">
+                    <div class="setting-label">
+                      <span data-fi="AI-malli" data-en="AI model">AI-malli</span>
+                      <button type="button" class="tip-btn" data-tip="tip-ai">ⓘ</button>
+                    </div>
+                    <div class="ai-grid" id="ctrl-ai-model">
+                      <button type="button" class="ai-opt" data-value="gemma12">gemma 12b</button>
+                      <button type="button" class="ai-opt active" data-value="claude">Claude</button>
+                      <button type="button" class="ai-opt" data-value="phi">phi 14b</button>
+                      <button type="button" class="ai-opt" data-value="phi-mini">phi-mini 3.8b</button>
+                      <button type="button" class="ai-opt" data-value="gemma">gemma 27b</button>
+                      <button type="button" class="ai-opt" data-value="gemini">Gemini</button>
+                    </div>
+                    <div class="tip-box" id="tip-ai"
+                      data-fi="&lt;strong&gt;Claude / Gemini&lt;/strong&gt;: kaupallisia maksullisia malleja, tarvitsevat API-avaimen. Nopeampia ja älykkäämpiä.&lt;br&gt;&lt;strong&gt;Paikalliset mallit&lt;/strong&gt; (phi, gemma…): ilmaisia, hitaampia ja heikompia, mutta pitävät kaikki tiedot yksityisinä."
+                      data-en="&lt;strong&gt;Claude / Gemini&lt;/strong&gt;: commercial paid models using API key. Faster and smarter.&lt;br&gt;&lt;strong&gt;Local models&lt;/strong&gt; (phi, gemma…): free, slower and not as smart, but keep all data private."><strong>Claude / Gemini</strong>: kaupallisia maksullisia malleja, tarvitsevat API-avaimen. Nopeampia ja älykkäämpiä.<br><strong>Paikalliset mallit</strong> (phi, gemma…): ilmaisia, hitaampia ja heikompia, mutta pitävät kaikki tiedot yksityisinä.</div>
+                  </div>
+
+                  <div id="nonLocalSettings">
+                    <div class="setting-row">
+                      <div class="setting-label">
+                        <span data-fi="Analyysiikkuna" data-en="Analysis window">Analyysiikkuna</span>
+                        <button type="button" class="tip-btn" data-tip="tip-gaps">ⓘ</button>
+                      </div>
+                      <div class="seg-ctrl" id="ctrl-gaps-window">
+                        <button type="button" class="seg-opt" data-value="3"
+                          data-fi="Viimeiset 3 chunkia" data-en="Last 3 chunks">Viimeiset 3 chunkia</button>
+                        <button type="button" class="seg-opt active" data-value="null"
+                          data-fi="Koko subsessio" data-en="Whole subsession">Koko subsessio</button>
+                      </div>
+                      <div class="tip-box" id="tip-gaps"
+                        data-fi="Koko subsessio analysoidaan (iso ryhmä alku, pienryhmä, iso ryhmä jatko — kaikki erikseen). Viimeiset 3 chunkia = vain 3 viimeisintä, ei aiempaa."
+                        data-en="Whole subsession is analysed (large group start, small group, large group continued — each separately). Last 3 chunks = only the last 3, nothing before.">Koko subsessio analysoidaan (iso ryhmä alku, pienryhmä, iso ryhmä jatko — kaikki erikseen). Viimeiset 3 chunkia = vain 3 viimeisintä, ei aiempaa.</div>
+                    </div>
+                  </div>
+
+                  <div id="localModelSettings" style="display:none">
+                    <div class="setting-row">
+                      <div class="setting-label">
+                        <span data-fi="Analyysin laajuus" data-en="Analysis scope">Analyysin laajuus</span>
+                        <button type="button" class="tip-btn" data-tip="tip-local-analysis">ⓘ</button>
+                      </div>
+                      <div class="seg-ctrl" id="ctrl-local-do-synthesis">
+                        <button type="button" class="seg-opt" data-value="0"
+                          data-fi="Vain aukot ja oletukset" data-en="Gaps &amp; assumptions only">Vain aukot ja oletukset</button>
+                        <button type="button" class="seg-opt active" data-value="1"
+                          data-fi="Aukot, oletukset ja synteesi" data-en="Gaps, assumptions &amp; synthesis">Aukot, oletukset ja synteesi</button>
+                      </div>
+                      <div class="tip-box" id="tip-local-analysis"
+                        data-fi="Synteesi lisää session keskeisten teemojen koosteen. Jos käsittely tuntuu liian hitaalta, valitse vaihtoehto ilman synteesiä."
+                        data-en="Synthesis adds a rolling summary of key session themes. If processing seems too slow, then choose option without synthesis.">Synteesi lisää session keskeisten teemojen koosteen. Jos käsittely tuntuu liian hitaalta, valitse vaihtoehto ilman synteesiä.</div>
+                    </div>
+                    <div class="setting-row" id="synthFreqRow">
+                      <div class="setting-label">
+                        <span data-fi="Synteesitaajuus" data-en="Synthesis frequency">Synteesitaajuus</span>
+                        <button type="button" class="tip-btn" data-tip="tip-synth-freq">ⓘ</button>
+                      </div>
+                      <div class="seg-ctrl" id="ctrl-local-synteesi-every-n">
+                        <button type="button" class="seg-opt active" data-value="1"
+                          data-fi="Joka chunk" data-en="Every chunk">Joka chunk</button>
+                        <button type="button" class="seg-opt" data-value="2"
+                          data-fi="Joka 2. chunk" data-en="Every 2nd">Joka 2. chunk</button>
+                      </div>
+                      <div class="tip-box" id="tip-synth-freq"
+                        data-fi="Joka 2. chunk päivittyy harvemmin ja on helpompi kannettavalle."
+                        data-en="Every 2nd chunk updates less often and is easier for the laptop.">Joka 2. chunk päivittyy harvemmin ja on helpompi kannettavalle.</div>
+                    </div>
+                    <div class="setting-row">
+                      <div class="setting-label">
+                        <span data-fi="Tietoaukko-ikkuna" data-en="Knowledge gap window">Tietoaukko-ikkuna</span>
+                        <button type="button" class="tip-btn" data-tip="tip-local-gaps">ⓘ</button>
+                      </div>
+                      <div class="seg-ctrl" id="ctrl-local-gaps-window">
+                        <button type="button" class="seg-opt active" data-value="1">1 chunk</button>
+                        <button type="button" class="seg-opt" data-value="2"
+                          data-fi="2 chunkia" data-en="2 chunks">2 chunkia</button>
+                        <button type="button" class="seg-opt" data-value="3"
+                          data-fi="3 chunkia" data-en="3 chunks">3 chunkia</button>
+                      </div>
+                      <div class="tip-box" id="tip-local-gaps"
+                        data-fi="Kuinka monen viimeisimmän chunkin tekstiä käytetään aukkojen ja oletusten tunnistamiseen."
+                        data-en="How many recent chunks to use for gap and assumption detection.">Kuinka monen viimeisimmän chunkin tekstiä käytetään aukkojen ja oletusten tunnistamiseen.</div>
+                    </div>
+                  </div>
+
+                  <div class="setting-row">
+                    <div class="setting-label">
+                      <span data-fi="Loppuaika" data-en="End time">Loppuaika</span>
+                      <span class="opt" data-fi="[valinnainen]" data-en="[optional]">[valinnainen]</span>
+                      <button type="button" class="tip-btn" data-tip="tip-endtime">ⓘ</button>
+                    </div>
+                    <input type="time" id="endTimeInput"
+                      style="padding:8px 12px;border-radius:12px;border:1px solid rgba(0,0,0,.12);
+                             background:rgba(0,0,0,.02);font-size:15px;font-family:inherit;
+                             color:rgba(0,0,0,.8);outline:none;width:fit-content">
+                    <div class="tip-box" id="tip-endtime"
+                      data-fi="Sessio pysähtyy automaattisesti tähän aikaan."
+                      data-en="Session stops automatically at this time.">Sessio pysähtyy automaattisesti tähän aikaan.</div>
+                  </div>
+
+                </div><!-- /settingsForm -->
+
+                <p id="statusMsg" style="margin:0;font-size:14px;text-align:center;color:rgba(0,0,0,.45);min-height:20px"></p>
+
+                <div style="padding-bottom:12px">
+                  <button type="button" id="btnStart" class="start-btn"
+                    data-fi="Käynnistä sessio" data-en="Start session">Käynnistä sessio</button>
+                </div>
+
+              </div>
+            </main>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = 'http://localhost:5001';
+      const LOCAL_MODELS = ['phi', 'phi-mini', 'gemma', 'gemma12'];
+
+      const STORAGE_KEYS = {
+        'ctrl-language':               'settings_language',
+        'ctrl-channels':               'settings_channels',
+        'ctrl-chunk':                  'settings_chunk',
+        'ctrl-backend':                'settings_backend',
+        'ctrl-model-size':             'settings_model_size',
+        'ctrl-ai-model':               'settings_ai_model',
+        'ctrl-gaps-window':            'settings_gaps_window',
+        'ctrl-local-do-synthesis':     'settings_local_do_synthesis',
+        'ctrl-local-synteesi-every-n': 'settings_local_synteesi_every_n',
+        'ctrl-local-gaps-window':      'settings_local_gaps_window',
+      };
+
+      // ── i18n ───────────────────────────────────────────────────────
+      function applyLang(lang) {
+        document.querySelectorAll('[data-fi][data-en]').forEach(el => {
+          const text = el.dataset[lang] || el.dataset.fi;
+          if (el.classList.contains('tip-box')) {
+            el.innerHTML = text;
+          } else {
+            el.textContent = text;
+          }
+        });
+      }
+
+      // ── Segmented controls ─────────────────────────────────────────
+      function initSeg(ctrlId, onChange) {
+        const ctrl = document.getElementById(ctrlId);
+        if (!ctrl) return;
+        ctrl.querySelectorAll('.seg-opt, .ai-opt').forEach(btn => {
+          btn.addEventListener('click', () => {
+            ctrl.querySelectorAll('.seg-opt, .ai-opt').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const key = STORAGE_KEYS[ctrlId];
+            if (key) localStorage.setItem(key, btn.dataset.value);
+            if (onChange) onChange(btn.dataset.value);
+          });
+        });
+      }
+
+      function getVal(ctrlId) {
+        const ctrl = document.getElementById(ctrlId);
+        if (!ctrl) return null;
+        const active = ctrl.querySelector('.seg-opt.active, .ai-opt.active');
+        return active ? active.dataset.value : null;
+      }
+
+      function setVal(ctrlId, value) {
+        const ctrl = document.getElementById(ctrlId);
+        if (!ctrl) return;
+        ctrl.querySelectorAll('.seg-opt, .ai-opt').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.value === value);
+        });
+      }
+
+      function loadSettings() {
+        for (const [ctrlId, key] of Object.entries(STORAGE_KEYS)) {
+          const saved = localStorage.getItem(key);
+          if (saved !== null) setVal(ctrlId, saved);
+        }
+        const endTime = localStorage.getItem('settings_end_time');
+        if (endTime) document.getElementById('endTimeInput').value = endTime;
+        // Fallback: aaltoai and magistral removed — reset to claude
+        if (!getVal('ctrl-ai-model')) setVal('ctrl-ai-model', 'claude');
+      }
+
+      // ── Tooltips ──────────────────────────────────────────────────
+      document.querySelectorAll('.tip-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.preventDefault();
+          const tip = document.getElementById(btn.dataset.tip);
+          if (!tip) return;
+          const wasOpen = tip.classList.contains('open');
+          document.querySelectorAll('.tip-box.open').forEach(t => t.classList.remove('open'));
+          if (!wasOpen) tip.classList.add('open');
+        });
+      });
+
+      // ── Conditional sections ──────────────────────────────────────
+      function updateAiUI(val) {
+        const isLocal = LOCAL_MODELS.includes(val);
+        document.getElementById('localModelSettings').style.display = isLocal ? 'block' : 'none';
+        document.getElementById('nonLocalSettings').style.display   = isLocal ? 'none'  : 'block';
+      }
+
+      function updateSynthFreqRow(val) {
+        document.getElementById('synthFreqRow').style.display = val === '1' ? 'flex' : 'none';
+      }
+
+      initSeg('ctrl-language', (val) => applyLang(val));
+      initSeg('ctrl-channels');
+      initSeg('ctrl-chunk');
+      initSeg('ctrl-backend');
+      initSeg('ctrl-model-size');
+      initSeg('ctrl-ai-model', updateAiUI);
+      initSeg('ctrl-gaps-window');
+      initSeg('ctrl-local-do-synthesis', updateSynthFreqRow);
+      initSeg('ctrl-local-synteesi-every-n');
+      initSeg('ctrl-local-gaps-window');
+
+      loadSettings();
+      applyLang(getVal('ctrl-language') || 'fi');
+      updateAiUI(getVal('ctrl-ai-model'));
+      updateSynthFreqRow(getVal('ctrl-local-do-synthesis'));
+
+      document.getElementById('endTimeInput').addEventListener('change', function() {
+        localStorage.setItem('settings_end_time', this.value);
+      });
+
+      // ── Pienryhmä ─────────────────────────────────────────────────
+      async function aloitaPienryhma() {
+        const btn = document.getElementById('btnAloitaPienryhma');
+        const isIsolated = btn.dataset.mode === 'isolated';
+        btn.disabled = true;
+        try {
+          await fetch(`${API_BASE}/api/${isIsolated ? 'merge' : 'isolate'}`, { method: 'POST' });
+        } catch(e) {}
+        btn.disabled = false;
+        await updateIsolationUI();
+      }
+
+      async function updateIsolationUI() {
+        try {
+          const r = await fetch(`${API_BASE}/api/context-mode`);
+          const d = await r.json();
+          const btn = document.getElementById('btnAloitaPienryhma');
+          const statusEl = document.getElementById('pienryhmaStatus');
+          const lang = getVal('ctrl-language') || 'fi';
+          if (d.mode === 'isolated') {
+            btn.textContent = lang === 'en' ? 'End small group' : 'Lopeta pienryhmä';
+            btn.style.background = '#ff9500';
+            btn.dataset.mode = 'isolated';
+            if (statusEl) statusEl.style.visibility = 'visible';
+          } else {
+            btn.textContent = lang === 'en' ? 'Start small group' : 'Aloita pienryhmä';
+            btn.style.background = '#111';
+            btn.dataset.mode = 'main';
+            if (statusEl) statusEl.style.visibility = 'hidden';
+          }
+        } catch(e) {}
+      }
+
+      document.getElementById('btnAloitaPienryhma').addEventListener('click', aloitaPienryhma);
+
+      // ── Recording state ────────────────────────────────────────────
+      function setRecordingState(isRecording) {
+        document.getElementById('recBanner').classList.toggle('show', isRecording);
+        document.getElementById('topControls').style.display = isRecording ? 'flex' : 'none';
+        document.getElementById('settingsForm').classList.toggle('form-disabled', isRecording);
+        document.getElementById('btnStart').disabled = isRecording;
+        if (isRecording) updateIsolationUI();
+      }
+
+      function checkState() {
+        fetch(`${API_BASE}/api/recorder-running`)
+          .then(r => r.json())
+          .then(d => setRecordingState(d.running))
+          .catch(() => {});
+      }
+      checkState();
+      setInterval(checkState, 5000);
+      setInterval(updateIsolationUI, 5000);
+
+      // ── Start ──────────────────────────────────────────────────────
+      document.getElementById('btnStart').addEventListener('click', async () => {
+        const btn      = document.getElementById('btnStart');
+        const statusEl = document.getElementById('statusMsg');
+        const lang     = getVal('ctrl-language') || 'fi';
+
+        const aiModel = getVal('ctrl-ai-model');
+        const isLocal = LOCAL_MODELS.includes(aiModel);
+        const gapsRaw = getVal('ctrl-gaps-window');
+
+        const payload = {
+          whisper_backend:        getVal('ctrl-backend'),
+          model_size:             getVal('ctrl-model-size'),
+          channels:               parseInt(getVal('ctrl-channels')),
+          language:               getVal('ctrl-language'),
+          chunk_duration:         parseInt(getVal('ctrl-chunk')),
+          ai_model:               aiModel,
+          gaps_window:            isLocal ? null : (gapsRaw === 'null' ? null : parseInt(gapsRaw)),
+          end_time:               document.getElementById('endTimeInput').value || null,
+          local_do_synthesis:     parseInt(getVal('ctrl-local-do-synthesis')),
+          local_synteesi_every_n: parseInt(getVal('ctrl-local-synteesi-every-n')),
+          local_gaps_window:      parseInt(getVal('ctrl-local-gaps-window')),
+        };
+
+        btn.disabled    = true;
+        btn.textContent = lang === 'en' ? 'Starting…' : 'Käynnistetään…';
+        statusEl.textContent = '';
+
+        try {
+          const r    = await fetch(`${API_BASE}/api/start`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const data = await r.json();
+          if (data.ok) {
+            statusEl.textContent = lang === 'en' ? 'Starting…' : 'Käynnistymässä…';
+            localStorage.setItem('nav_stage', 'during');
+            localStorage.setItem('nav_tab', 'gaps');
+            setTimeout(() => { window.location.href = '/'; }, 1800);
+          } else {
+            statusEl.textContent = `${lang === 'en' ? 'Error' : 'Virhe'}: ${data.error}`;
+            btn.disabled    = false;
+            btn.textContent = btn.dataset[lang] || btn.dataset.fi;
+          }
+        } catch (err) {
+          statusEl.textContent = lang === 'en' ? 'Network error. Check connection.' : 'Verkkovirhe. Tarkista yhteys.';
+          btn.disabled    = false;
+          btn.textContent = btn.dataset[lang] || btn.dataset.fi;
+        }
+      });
+
+      // ── Stop ───────────────────────────────────────────────────────
+      document.getElementById('btnStop').addEventListener('click', async () => {
+        const btn      = document.getElementById('btnStop');
+        const statusEl = document.getElementById('statusMsg');
+        const lang     = getVal('ctrl-language') || 'fi';
+
+        const msg = lang === 'en' ? 'Stop the session?' : 'Haluatko varmasti lopettaa session?';
+        if (!confirm(msg)) return;
+
+        btn.disabled    = true;
+        btn.textContent = lang === 'en' ? 'Stopping…' : 'Lopetetaan…';
+
+        try {
+          const r    = await fetch(`${API_BASE}/api/stop`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          const data = await r.json();
+          if (data.ok) {
+            statusEl.textContent = '';
+            setTimeout(checkState, 2500);
+          } else {
+            statusEl.textContent = `${lang === 'en' ? 'Error' : 'Virhe'}: ${data.error}`;
+            btn.disabled    = false;
+            btn.textContent = btn.dataset[lang] || btn.dataset.fi;
+          }
+        } catch (err) {
+          statusEl.textContent = lang === 'en' ? 'Network error.' : 'Verkkovirhe.';
+          btn.disabled    = false;
+          btn.textContent = btn.dataset[lang] || btn.dataset.fi;
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,138 @@
+HOW TO USE THE WORKSHOP AI TOOL
+================================
+
+WHAT IT DOES
+------------
+The tool listens to a workshop in real time, transcribes speech every N minutes
+(default: 5), and sends the transcript to an AI that identifies:
+
+  - Knowledge gaps: things the group recognizes as lacking research evidence
+  - Assumptions: things being taken for granted without evidence
+  - Synthesis: a rolling summary of what themes have come up across the session
+  - Topics: what has been talked about most
+  - Disagreements: places where participants seem to conflict
+
+All of this updates automatically on a browser dashboard at http://localhost:5001.
+
+Secondary features: image generation (Gemini/DALL-E), an assumptions diagram
+Excel export, a post-session chat with the transcript, and a custom summary
+generator.
+
+
+THE PIPELINE (WHAT ACTUALLY HAPPENS)
+-------------------------------------
+Microphone -> 5-min audio chunk -> Whisper transcription -> text file -> 
+text sent to LLM analysis -> analysis is displayed in browser
+
+
+The pipeline runs continuously. While audio chunk N+1 is being recorded, chunk N
+is being transcribed and analyzed in a background thread. The UI checks every
+60 seconds for new results.
+
+
+STARTING A SESSION
+------------------
+1. Run: python launch.py (or python3 launch.py on Mac)
+2. Browser opens to http://localhost:5001/settings after ~30 seconds
+3. Configure settings, click Start session
+4. Wait for the red REC indicator to appear -- recording has started
+5. The first analysis result appears after the first full chunk completes
+
+First session: the Whisper model downloads on first run (hundreds of MB to
+over 1 GB). Budget 5-10 extra minutes.
+
+
+SETTINGS THAT MATTER
+---------------------
+Language:           Must match what will be spoken. Affects both transcription
+                    accuracy AND the language of the AI analysis output.
+
+Whisper model:      mlx = Apple Silicon only
+                    faster-whisper = Windows default, works everywhere
+                    standard = needs a dedicated GPU
+
+Model size:         Medium is the right default. Large is more accurate but
+                    needs 16+ GB RAM and is 2-3x slower.
+
+Analysis frequency: 5 min is the right balance. 1 min gives noisy, short-context
+                    results, good for testing. 10 min gives broader context but slower feedback.
+
+AI model:           Claude > Gemini for analysis quality.
+                    Local models (phi, gemma) are noticeably weaker but private.
+
+Analysis window:    Whole subsession = AI sees everything since the session start
+                    Last 3 chunks = AI only sees the most recent content
+
+
+THE SMALL GROUP FEATURE
+------------------------
+When the group splits into breakout groups, click Start small group in the
+settings (gear icon). This starts a separate analysis context so the small-group
+transcript is tracked separately from the main session. Clicking End small group
+makes sure small group discussion stays behind, and new context starts.
+
+
+
+WHAT IS RELIABLE
+----------------
+Audio recording: Solid. A 5-second overlap between chunks prevents speech at
+chunk boundaries from being lost. Proper nouns and acronyms are the most error-prone part of transcription.
+  Names of people, places, and organizations often get garbled. There are no speaker labels, so 
+  AI cannot tell who said what, but it is not necessary in this context.
+
+Whisper transcription (medium model): Good for clear speech in a quiet room.
+Degrades with background noise, multiple simultaneous speakers, technical
+jargon, proper nouns, and fast speech. Errors are visible in the Transcript tab. 
+Faster-whisper has around 5-10 % lower accuracy than standard Whisper.
+MLX-optimised whisper is as accurate as standard Whisper.
+
+Synthesis: The 4-6 theme cards are generally an honest
+summary of what was discussed. LLMs are good at summarising. 
+
+
+WHAT IS LESS RELIABLE
+----------------------
+Assumptions: AI's judgment call, not an objective classification. 
+Treat them as provocations to consider, not diagnoses.
+
+Knowledge gaps: The hardest task, so the least reliable. The AI has to identify a knowledge gap in research. Problems:
+  - AI identifies gaps itself, not just shows what participants have classified as knowledge gaps.
+  - AI uses outdated training data and does not know everything, 
+    so it often says that there is no research, even though there actually is.
+  - The AI interprets "likely intended words" from transcription -- this corrects real
+    errors but also introduces unreliable interpretations
+
+
+Topics: Treat the frequency counts as rough rankings, not actual word counts --
+the AI estimates them rather than counting occurrences.
+
+Disagreements: Could be generic or repeating what other tabs have already shown. 
+The AI sees one continuous block of text with no speaker labels. 
+It has to infer disagreement from content alone, which
+it might get wrong or miss entirely.
+
+
+HOW TO INTERPRET THE OUTPUT CORRECTLY
+---------------------------------------
+DO:
+  - Use knowledge gaps and assumptions as ideas for facilitator intervention
+    ("AI flagged this -- does the group recognize it?"), not as ground truth.
+  - Cross-check against the Transcript tab. The raw transcript is the most
+    reliable output. Everything else is an interpretation of it. 
+    You can download transcript as a plain text file and do your own analysis.
+  - Pay attention to topics with high counts -- frequency is easier for the AI
+    to estimate than subtlety.
+
+DON'T:
+  - Trust any specific claim without reading the corresponding
+    part of the transcript. The AI can produce plausible-sounding outputs that
+    nobody actually mentioned.
+  - Treat assumptions as things participants consciously hold - AI is guessing intent.
+
+
+THE STAR / SAVE FEATURE
+------------------------
+You can star individual insights (star icon next to each item) to save them.
+Starred items persist in browser localStorage and are also saved to disk.
+Stars survive page reloads but reset when a new session starts.
+You can download all saved insights as a text file from the Summary tab.
